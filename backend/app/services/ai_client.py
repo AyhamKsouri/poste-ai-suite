@@ -1,11 +1,11 @@
 """
-Wraps all Claude API calls used by the app (complaint triage + RAG answers).
+Wraps all Groq API calls used by the app (complaint triage + RAG answers).
 
-If ANTHROPIC_API_KEY is not set, every function falls back to a deterministic
+If GROQ_API_KEY is not set, every function falls back to a deterministic
 mock so the whole product is demoable without any API key. If a key is set but
-a call fails for any reason (network, invalid key, refusal), we also fall back
-to the mock rather than raising - this endpoint should never 500 because of an
-AI provider hiccup.
+a call fails for any reason (network, invalid key, content filter), we also
+fall back to the mock rather than raising - this endpoint should never 500
+because of an AI provider hiccup.
 """
 
 import json
@@ -18,9 +18,9 @@ logger = logging.getLogger(__name__)
 
 _client = None
 if settings.ai_enabled:
-    import anthropic
+    from groq import Groq
 
-    _client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    _client = Groq(api_key=settings.groq_api_key)
 
 COMPLAINT_CATEGORIES = ["delivery_delay", "lost_package", "billing", "damaged_item", "other"]
 
@@ -119,21 +119,29 @@ def classify_complaint(raw_text: str) -> dict:
         return _mock_classify(raw_text)
 
     try:
-        response = _client.messages.create(
-            model=settings.anthropic_model,
-            max_tokens=1024,
-            system=COMPLAINT_SYSTEM_PROMPT,
-            output_config={"effort": "low", "format": {"type": "json_schema", "schema": COMPLAINT_SCHEMA}},
-            messages=[{"role": "user", "content": raw_text}],
+        response = _client.chat.completions.create(
+            model=settings.groq_model,
+            max_completion_tokens=1024,
+            messages=[
+                {"role": "system", "content": COMPLAINT_SYSTEM_PROMPT},
+                {"role": "user", "content": raw_text},
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "complaint_classification",
+                    "strict": True,
+                    "schema": COMPLAINT_SCHEMA,
+                },
+            },
         )
-        if response.stop_reason == "refusal":
-            logger.warning("Complaint classification refused by model; falling back to mock")
+        choice = response.choices[0]
+        if choice.finish_reason == "content_filter":
+            logger.warning("Complaint classification filtered by model; falling back to mock")
             return _mock_classify(raw_text)
-        text_block = next(b.text for b in response.content if b.type == "text")
-        data = json.loads(text_block)
-        return data
+        return json.loads(choice.message.content)
     except Exception:
-        logger.exception("Claude classify_complaint call failed; falling back to mock")
+        logger.exception("Groq classify_complaint call failed; falling back to mock")
         return _mock_classify(raw_text)
 
 
@@ -156,7 +164,7 @@ def _mock_answer(question: str, chunks: list[str]) -> str:
 
 def answer_question(question: str, chunks: list[str], history: list[dict] | None = None) -> str:
     """`history` is prior conversation turns as [{"role": "user"|"assistant", "content": str}, ...],
-    oldest first, NOT including the current `question`. Real Claude calls get the full conversation
+    oldest first, NOT including the current `question`. Real Groq calls get the full conversation
     so follow-ups and things like "merci" after an answer are understood in context; the mock can
     only approximate that with the greeting/thanks heuristics above, since it has no real reasoning."""
     if not _client:
@@ -171,21 +179,21 @@ def answer_question(question: str, chunks: list[str], history: list[dict] | None
         f"Reference material (internal documents, for context only):\n\n{context}\n\n"
         f"---\n\nEmployee question: {question}"
     )
-    messages = [{"role": turn["role"], "content": turn["content"]} for turn in (history or [])]
+    messages = [{"role": "system", "content": RAG_SYSTEM_PROMPT}]
+    messages.extend({"role": turn["role"], "content": turn["content"]} for turn in (history or []))
     messages.append({"role": "user", "content": user_content})
 
     try:
-        response = _client.messages.create(
-            model=settings.anthropic_model,
-            max_tokens=1024,
-            system=RAG_SYSTEM_PROMPT,
-            output_config={"effort": "low"},
+        response = _client.chat.completions.create(
+            model=settings.groq_model,
+            max_completion_tokens=1024,
             messages=messages,
         )
-        if response.stop_reason == "refusal":
-            logger.warning("RAG answer refused by model; falling back to mock")
+        choice = response.choices[0]
+        if choice.finish_reason == "content_filter":
+            logger.warning("RAG answer filtered by model; falling back to mock")
             return _mock_answer(question, chunks)
-        return next(b.text for b in response.content if b.type == "text")
+        return choice.message.content
     except Exception:
-        logger.exception("Claude answer_question call failed; falling back to mock")
+        logger.exception("Groq answer_question call failed; falling back to mock")
         return _mock_answer(question, chunks)

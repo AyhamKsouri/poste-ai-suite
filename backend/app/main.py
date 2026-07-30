@@ -53,8 +53,8 @@ def on_startup():
 
     if not settings.ai_enabled:
         logging.warning(
-            "ANTHROPIC_API_KEY is not set - RAG answers and complaint triage are running on "
-            "mock responses. Add a key to backend/.env to enable real Claude API calls."
+            "GROQ_API_KEY is not set - RAG answers and complaint triage are running on "
+            "mock responses. Add a key to backend/.env to enable real Groq API calls."
         )
 
 

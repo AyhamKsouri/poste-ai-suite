@@ -3,7 +3,7 @@
 ![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
-![Claude](https://img.shields.io/badge/Claude%20API-claude--opus--5-D97757?logo=anthropic&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq%20API-gpt--oss--120b-F55036?logo=groq&logoColor=white)
 ![License](https://img.shields.io/badge/status-working%20prototype-brightgreen)
 
 Two AI modules on one platform, built for La Poste Tunisienne:
@@ -29,15 +29,16 @@ graph LR
   B --> RET["TF-IDF retrieval index<br/>(scikit-learn)"]
   B --> AI{"AI service"}
   RET --> AI
-  AI -->|API key set| CLAUDE["Claude API<br/>claude-opus-5"]
+  AI -->|API key set| GROQ["Groq API<br/>openai/gpt-oss-120b"]
   AI -->|no key / call fails| MOCK["Deterministic mock<br/>fallback"]
 ```
 
-The AI service is the single point every generated answer flows through: it always tries a real Claude API call first, and transparently falls back to rule-based mock logic if no key is configured or the call fails — nothing else in the app needs to know the difference.
+The AI service is the single point every generated answer flows through: it always tries a real Groq API call first, and transparently falls back to rule-based mock logic if no key is configured or the call fails — nothing else in the app needs to know the difference.
 
 ## AI design highlights
 
-- **Structured outputs** — complaint classification uses Claude's JSON-schema-constrained output (`output_config.format`), so category/urgency/summary/draft come back as guaranteed-valid JSON, no fragile parsing.
+- **Structured outputs** — complaint classification uses Groq's strict JSON-schema output (`response_format: {type: "json_schema", strict: true}`, on `openai/gpt-oss-120b`), so category/urgency/summary/draft come back as guaranteed-valid JSON, no fragile parsing.
+- **Conversation memory** — the frontend sends the full conversation with every question, so follow-ups and conversational replies ("merci" after an answer) are understood in context instead of evaluated in isolation.
 - **Anti-hallucination guard** — RAG retrieval has a minimum relevance threshold; below it, the assistant says it doesn't know instead of guessing.
 - **Prompt-injection safety** — every system prompt explicitly tells the model to treat complaint text and retrieved document chunks as data to analyze, never as instructions to follow.
 - **Never breaks** — no API key, a failed call, or a model refusal all fall back to deterministic mock responses automatically. The app is always demoable, online or offline.
@@ -58,7 +59,7 @@ Everything else (auth, schema, endpoints, prompt-injection-safe AI prompts) matc
 ## Requirements
 
 - Python 3.12+, Node.js 18+ (both already installed if you're reading this after the initial setup)
-- Optional: an Anthropic API key, for real AI responses instead of mocked ones
+- Optional: a Groq API key (free, from [console.groq.com](https://console.groq.com/keys)), for real AI responses instead of mocked ones
 
 ## Setup
 
@@ -70,13 +71,13 @@ python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 copy .env.example .env
-# edit .env and set ANTHROPIC_API_KEY if you have one
+# edit .env and set GROQ_API_KEY if you have one
 uvicorn app.main:app --reload
 ```
 
 Backend runs at http://127.0.0.1:8000. On first run it creates `data/poste.db` (SQLite) and seeds an admin account: `admin@poste.tn` / `admin123` (change `ADMIN_EMAIL`/`ADMIN_PASSWORD` in `.env` before a real deployment).
 
-Without `ANTHROPIC_API_KEY` set, the app runs entirely on deterministic mock AI responses — every endpoint still works end-to-end for a demo, just without real Claude-generated text.
+Without `GROQ_API_KEY` set, the app runs entirely on deterministic mock AI responses — every endpoint still works end-to-end for a demo, just without real AI-generated text.
 
 ### Frontend
 
@@ -105,7 +106,7 @@ Frontend runs at http://localhost:5173 and proxies `/api/*` to the backend.
 | Auth | PyJWT · passlib/bcrypt |
 | RAG retrieval | scikit-learn (TF-IDF + cosine similarity) |
 | Text extraction | pypdf · python-docx |
-| AI | Claude API (`claude-opus-5`) via the official `anthropic` Python SDK |
+| AI | Groq API (`openai/gpt-oss-120b`) via the official `groq` Python SDK |
 | Frontend | React 18 · Vite · React Router · Tailwind CSS |
 | Versioning | Git |
 
@@ -124,7 +125,7 @@ backend/
       rag.py             /rag/documents, /rag/ask, /rag/stats, ...
       complaints.py       /complaints, /complaints/stats, ...
     services/
-      ai_client.py       Claude API calls + mock fallback
+      ai_client.py       Groq API calls + mock fallback
       documents.py        PDF/DOCX text extraction + chunking
       vectorstore.py      TF-IDF retrieval index
 frontend/
@@ -143,7 +144,7 @@ frontend/
 
 ## Roadmap
 
-1. **Enable live AI** — set `ANTHROPIC_API_KEY` in `backend/.env` and restart; no code changes needed.
+1. **Enable live AI** — set `GROQ_API_KEY` in `backend/.env` and restart; no code changes needed.
 2. **Automated tests** — cover auth, classification, and retrieval endpoints.
 3. **Production database** — optional migration to PostgreSQL + Docker Compose for multi-user deployment.
 4. **Semantic retrieval** — optional swap of TF-IDF for embedding-based search if match quality needs to improve.
