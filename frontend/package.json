@@ -2,6 +2,7 @@
   "name": "poste-ai-suite-frontend",
   "private": true,
   "version": "0.1.0",
+  "author": "Ayham Ksouri and Yassine Jouini",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -6,6 +6,8 @@
 ![Groq](https://img.shields.io/badge/Groq%20API-gpt--oss--120b-F55036?logo=groq&logoColor=white)
 ![License](https://img.shields.io/badge/status-working%20prototype-brightgreen)
 
+Developed by **Ayham Ksouri** and **Yassine Jouini**.
+
 Two AI modules on one platform, built for La Poste Tunisienne:
 
 - 🤖 **Assistant IA (RAG)** — employees ask questions about internal procedures in natural language; the system retrieves the relevant document chunks and generates a grounded answer with source citations, or honestly says it doesn't know.
@@ -149,3 +151,8 @@ frontend/
 3. **Production database** — optional migration to PostgreSQL + Docker Compose for multi-user deployment.
 4. **Semantic retrieval** — optional swap of TF-IDF for embedding-based search if match quality needs to improve.
 5. **Deployment** — host backend and frontend for access outside the local machine.
+
+## Authors
+
+- **Ayham Ksouri**
+- **Yassine Jouini**
