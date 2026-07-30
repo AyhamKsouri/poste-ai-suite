@@ -86,3 +86,44 @@ class RagStats(BaseModel):
     unrated_count: int
     avg_response_time_ms: float
     top_questions: list[str]
+
+
+# ---- Complaints ----
+
+class ComplaintCreate(BaseModel):
+    customer_name: str | None = None
+    customer_contact: str | None = None
+    raw_text: str
+
+
+class ComplaintOut(BaseModel):
+    id: str
+    customer_name: str | None
+    customer_contact: str | None
+    raw_text: str
+    category: str | None
+    urgency: str | None
+    ai_summary: str | None
+    draft_reply: str | None
+    final_reply: str | None
+    status: str
+    created_at: datetime
+    replied_at: datetime | None
+
+    class Config:
+        from_attributes = True
+
+
+class ReplyRequest(BaseModel):
+    final_reply: str
+
+
+class StatusUpdateRequest(BaseModel):
+    status: str
+
+
+class ComplaintStats(BaseModel):
+    total: int
+    by_category: dict[str, int]
+    by_urgency: dict[str, int]
+    avg_resolution_hours: float | None

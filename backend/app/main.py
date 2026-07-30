@@ -7,7 +7,7 @@ from app.auth import hash_password
 from app.config import settings
 from app.db import Base, SessionLocal, engine
 from app.models import User
-from app.routers import auth, rag
+from app.routers import auth, complaints, rag
 from app.services import vectorstore
 
 logging.basicConfig(level=logging.INFO)
@@ -24,6 +24,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(rag.router)
+app.include_router(complaints.router)
 
 
 @app.on_event("startup")

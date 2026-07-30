@@ -75,3 +75,21 @@ class Question(Base):
     feedback: Mapped[str | None] = mapped_column(String(20), nullable=True)  # helpful | not_helpful
     response_time_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Complaint(Base):
+    __tablename__ = "complaints"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_id)
+    customer_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    customer_contact: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    raw_text: Mapped[str] = mapped_column(Text, nullable=False)
+    category: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    urgency: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    ai_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    draft_reply: Mapped[str | None] = mapped_column(Text, nullable=True)
+    final_reply: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="new")  # new | reviewed | replied
+    assigned_to: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    replied_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
