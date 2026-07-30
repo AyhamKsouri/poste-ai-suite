@@ -14,7 +14,24 @@ from sqlalchemy.orm import Session
 from app.models import DocumentChunk
 
 # Below this similarity, we treat retrieval as "nothing relevant found" (Goal A3).
-MIN_RELEVANCE = 0.08
+MIN_RELEVANCE = 0.12
+
+# TF-IDF's IDF weighting degenerates with a tiny corpus (a single document can't
+# tell "common word" from "meaningful word" apart), which lets French function
+# words create spurious matches for unrelated questions. Stripping them out
+# keeps similarity scores driven by actual content words instead of grammar.
+FRENCH_STOP_WORDS = [
+    "au", "aux", "avec", "ce", "ces", "dans", "de", "des", "du", "elle", "elles",
+    "en", "et", "eux", "il", "ils", "je", "la", "le", "les", "leur", "leurs",
+    "lui", "ma", "mais", "me", "même", "mes", "moi", "mon", "ne", "nos", "notre",
+    "nous", "on", "ou", "où", "par", "pas", "pour", "qu", "que", "qui", "quoi",
+    "sa", "se", "ses", "son", "sur", "ta", "te", "tes", "toi", "ton", "tu",
+    "un", "une", "vos", "votre", "vous", "c", "d", "j", "l", "à", "m", "n", "s",
+    "t", "y", "été", "être", "avoir", "est", "sont", "suis", "es", "sommes",
+    "êtes", "cette", "cet", "ceux", "quel", "quelle", "quels", "quelles",
+    "comment", "pourquoi", "quand", "si", "donc", "plus", "moins", "très",
+    "bien", "aussi", "alors", "tout", "tous", "toute", "toutes",
+]
 
 _state = {"vectorizer": None, "matrix": None, "chunk_ids": [], "texts": []}
 
@@ -27,7 +44,7 @@ def rebuild_index(db: Session) -> None:
 
     texts = [r.content for r in rows]
     ids = [r.id for r in rows]
-    vectorizer = TfidfVectorizer(max_features=20000)
+    vectorizer = TfidfVectorizer(max_features=20000, stop_words=FRENCH_STOP_WORDS)
     matrix = vectorizer.fit_transform(texts)
     _state.update(vectorizer=vectorizer, matrix=matrix, chunk_ids=ids, texts=texts)
 
