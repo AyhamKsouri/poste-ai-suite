@@ -48,8 +48,14 @@ class DocumentOut(BaseModel):
         from_attributes = True
 
 
+class ChatTurn(BaseModel):
+    role: str  # 'user' | 'assistant'
+    content: str
+
+
 class AskRequest(BaseModel):
     question: str
+    history: list[ChatTurn] = []
 
 
 class SourceOut(BaseModel):

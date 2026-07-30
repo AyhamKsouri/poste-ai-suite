@@ -55,7 +55,7 @@ export const api = {
     return request("/rag/documents", { method: "POST", body: form, isForm: true });
   },
   deleteDocument: (id) => request(`/rag/documents/${id}`, { method: "DELETE" }),
-  ask: (question) => request("/rag/ask", { method: "POST", body: { question } }),
+  ask: (question, history = []) => request("/rag/ask", { method: "POST", body: { question, history } }),
   sendFeedback: (questionId, feedback) =>
     request(`/rag/questions/${questionId}/feedback`, { method: "POST", body: { feedback } }),
   listQuestions: () => request("/rag/questions"),

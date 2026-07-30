@@ -10,11 +10,12 @@ export default function Assistant() {
     e.preventDefault();
     if (!question.trim()) return;
     const q = question;
+    const history = messages.map((m) => ({ role: m.role, content: m.text }));
     setQuestion("");
     setMessages((m) => [...m, { role: "user", text: q }]);
     setBusy(true);
     try {
-      const res = await api.ask(q);
+      const res = await api.ask(q, history);
       setMessages((m) => [
         ...m,
         {

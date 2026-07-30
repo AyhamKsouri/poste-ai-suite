@@ -106,7 +106,8 @@ def ask(payload: AskRequest, db: Session = Depends(get_db), user: User = Depends
     matches = vectorstore.query(payload.question, top_k=4)
     chunk_texts = [m["content"] for m in matches]
 
-    answer = answer_question(payload.question, chunk_texts)
+    history = [{"role": turn.role, "content": turn.content} for turn in payload.history]
+    answer = answer_question(payload.question, chunk_texts, history)
     elapsed_ms = int((time.time() - start) * 1000)
 
     chunk_id_to_doc = {}

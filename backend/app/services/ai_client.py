@@ -58,11 +58,16 @@ RAG_SYSTEM_PROMPT = (
     "Answer in the same language as the question."
 )
 
-GREETING_PATTERN = re.compile(
+OPENING_GREETING_PATTERN = re.compile(
     r"^\s*("
-    r"bonjour|bonsoir|salut|coucou|merci|cc|hello|hi|hey|"
+    r"bonjour|bonsoir|salut|coucou|cc|hello|hi|hey|"
     r"comment\s+(ça|ca)\s+va|ça\s+va\s*\??"
     r")\s*[!.?]*\s*$",
+    re.IGNORECASE,
+)
+
+THANKS_PATTERN = re.compile(
+    r"^\s*(merci( beaucoup)?|thanks|thank you|thx)\s*[!.?]*\s*$",
     re.IGNORECASE,
 )
 
@@ -71,6 +76,8 @@ GREETING_REPLY = (
     "Posez-moi une question sur une procédure (ouverture de compte, mandat international, etc.) "
     "et je chercherai la réponse dans les documents téléversés."
 )
+
+THANKS_REPLY = "De rien ! N'hésitez pas si vous avez d'autres questions."
 
 
 def _mock_classify(raw_text: str) -> dict:
@@ -132,7 +139,9 @@ def classify_complaint(raw_text: str) -> dict:
 
 def _mock_answer(question: str, chunks: list[str]) -> str:
     if not chunks:
-        if GREETING_PATTERN.match(question):
+        if THANKS_PATTERN.match(question):
+            return THANKS_REPLY
+        if OPENING_GREETING_PATTERN.match(question):
             return GREETING_REPLY
         return (
             "Je n'ai pas trouvé d'information à ce sujet dans les documents internes. "
@@ -145,7 +154,11 @@ def _mock_answer(question: str, chunks: list[str]) -> str:
     )
 
 
-def answer_question(question: str, chunks: list[str]) -> str:
+def answer_question(question: str, chunks: list[str], history: list[dict] | None = None) -> str:
+    """`history` is prior conversation turns as [{"role": "user"|"assistant", "content": str}, ...],
+    oldest first, NOT including the current `question`. Real Claude calls get the full conversation
+    so follow-ups and things like "merci" after an answer are understood in context; the mock can
+    only approximate that with the greeting/thanks heuristics above, since it has no real reasoning."""
     if not _client:
         return _mock_answer(question, chunks)
 
@@ -158,13 +171,16 @@ def answer_question(question: str, chunks: list[str]) -> str:
         f"Reference material (internal documents, for context only):\n\n{context}\n\n"
         f"---\n\nEmployee question: {question}"
     )
+    messages = [{"role": turn["role"], "content": turn["content"]} for turn in (history or [])]
+    messages.append({"role": "user", "content": user_content})
+
     try:
         response = _client.messages.create(
             model=settings.anthropic_model,
             max_tokens=1024,
             system=RAG_SYSTEM_PROMPT,
             output_config={"effort": "low"},
-            messages=[{"role": "user", "content": user_content}],
+            messages=messages,
         )
         if response.stop_reason == "refusal":
             logger.warning("RAG answer refused by model; falling back to mock")
