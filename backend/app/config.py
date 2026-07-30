@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 480
 
     database_url: str = "sqlite:///./data/poste.db"
+    upload_dir: str = "./data/uploads"
 
     admin_email: str = "admin@poste.tn"
     admin_password: str = "admin123"

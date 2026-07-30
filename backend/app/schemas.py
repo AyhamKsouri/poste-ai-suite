@@ -33,3 +33,16 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+# ---- RAG ----
+
+class DocumentOut(BaseModel):
+    id: str
+    title: str
+    original_filename: str | None
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
