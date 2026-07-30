@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Poste Tunisienne — AI Suite — Rapport d'avancement</title>
 <style>
   :root {
@@ -176,6 +181,66 @@
     box-shadow: var(--shadow);
     overflow-x: auto;
   }
+
+  .arch-diagram {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 0;
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+  }
+  .arch-box {
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    border-radius: 6px;
+    padding: 10px 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--ink);
+    min-width: 170px;
+  }
+  .arch-box--accent { border: 2px solid var(--accent); }
+  .arch-sub {
+    display: block;
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    margin-top: 3px;
+  }
+  .arch-connector {
+    width: 2px;
+    height: 20px;
+    background: var(--line);
+  }
+  .arch-arrowhead {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 7px solid var(--line);
+    margin-top: -1px;
+  }
+  .arch-label {
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 2px 0;
+    white-space: nowrap;
+  }
+  .arch-row {
+    display: flex;
+    gap: 28px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 2px 0;
+  }
+  .arch-branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
   .shot-card { padding: 0; overflow: hidden; }
   .shot-card img { display: block; width: 100%; height: auto; }
   .shot-card figcaption {
@@ -297,6 +362,8 @@
     body { background: white; }
   }
 </style>
+</head>
+<body>
 
 <div class="stripe"></div>
 <div class="page">
@@ -338,22 +405,43 @@
   <section>
     <div class="eyebrow"><span>Architecture</span></div>
     <div class="diagram-card">
-      <pre class="mermaid">
-graph LR
-  U["Agent / Admin<br/>navigateur"] -->|JWT| F["Frontend<br/>React + Vite"]
-  F -->|REST / JSON| B["Backend<br/>FastAPI"]
-  B --> DB[("Base de données<br/>SQLite")]
-  B --> RET["Index de récupération<br/>TF-IDF + similarité cosinus"]
-  B --> AI{"Service IA"}
-  RET --> AI
-  AI -->|clé API présente| CLAUDE["Claude API<br/>claude-opus-5"]
-  AI -->|clé API absente ou échec| MOCK["Repli déterministe<br/>règles + gabarits"]
-      </pre>
+      <div class="arch-diagram">
+        <div class="arch-box">Agent / Admin<span class="arch-sub">navigateur</span></div>
+        <div class="arch-connector"></div>
+        <div class="arch-label">JWT</div>
+        <div class="arch-connector"></div><div class="arch-arrowhead"></div>
+        <div class="arch-box">Frontend<span class="arch-sub">React + Vite</span></div>
+        <div class="arch-connector"></div>
+        <div class="arch-label">REST / JSON</div>
+        <div class="arch-connector"></div><div class="arch-arrowhead"></div>
+        <div class="arch-box">Backend<span class="arch-sub">FastAPI</span></div>
+        <div class="arch-connector"></div><div class="arch-arrowhead"></div>
+        <div class="arch-row">
+          <div class="arch-box">Base de données<span class="arch-sub">SQLite</span></div>
+          <div class="arch-box">Index de récupération<span class="arch-sub">TF-IDF + similarité cosinus</span></div>
+        </div>
+        <div class="arch-connector"></div><div class="arch-arrowhead"></div>
+        <div class="arch-box arch-box--accent">Service IA</div>
+        <div class="arch-row" style="margin-top: 8px;">
+          <div class="arch-branch">
+            <div class="arch-label">clé API présente</div>
+            <div class="arch-connector"></div><div class="arch-arrowhead"></div>
+            <div class="arch-box">Groq API<span class="arch-sub">openai/gpt-oss-120b</span></div>
+          </div>
+          <div class="arch-branch">
+            <div class="arch-label">clé absente / échec</div>
+            <div class="arch-connector"></div><div class="arch-arrowhead"></div>
+            <div class="arch-box">Repli déterministe<span class="arch-sub">règles + gabarits</span></div>
+          </div>
+        </div>
+      </div>
     </div>
     <p style="margin-top:14px;">
       Le service IA est le seul point d'accès aux réponses générées : il tente d'abord un appel réel
-      à Claude, et bascule automatiquement sur une logique de repli si aucune clé n'est configurée ou
-      si l'appel échoue — le reste de l'application n'a jamais connaissance de la distinction.
+      à Groq, et bascule automatiquement sur une logique de repli si aucune clé n'est configurée ou
+      si l'appel échoue — le reste de l'application n'a jamais connaissance de la distinction. La base
+      de données SQLite est utilisée directement par le backend (comptes, réclamations, historique) ;
+      seul l'index de récupération alimente le service IA pour l'assistant RAG.
     </p>
   </section>
 
@@ -502,7 +590,10 @@ graph LR
 
   <footer>
     <span>La Poste Tunisienne — AI Suite</span>
-    <span>Dépôt Git local — 2 commits — prototype fonctionnel</span>
+    <span>github.com/AyhamKsouri/poste-ai-suite — prototype fonctionnel</span>
   </footer>
 
 </div>
+
+</body>
+</html>
