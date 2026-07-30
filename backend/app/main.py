@@ -50,7 +50,13 @@ def on_startup():
     finally:
         db.close()
 
+    if not settings.ai_enabled:
+        logging.warning(
+            "ANTHROPIC_API_KEY is not set - RAG answers and complaint triage are running on "
+            "mock responses. Add a key to backend/.env to enable real Claude API calls."
+        )
+
 
 @app.get("/")
 def root():
-    return {"status": "ok"}
+    return {"status": "ok", "ai_enabled": settings.ai_enabled}

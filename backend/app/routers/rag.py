@@ -1,15 +1,27 @@
 import os
+import time
 import uuid
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user, require_admin
 from app.config import settings
 from app.db import get_db
-from app.models import AuditLog, Document, DocumentChunk, User
-from app.schemas import DocumentOut
+from app.models import AuditLog, Document, DocumentChunk, Question, User
+from app.schemas import (
+    AskRequest,
+    AskResponse,
+    DocumentOut,
+    FeedbackRequest,
+    QuestionOut,
+    RagStats,
+    SourceOut,
+)
 from app.services import vectorstore
+from app.services.ai_client import answer_question
 from app.services.documents import chunk_text, extract_text
 
 router = APIRouter(prefix="/rag", tags=["rag"])
@@ -86,3 +98,94 @@ def delete_document(document_id: str, db: Session = Depends(get_db), admin: User
     db.commit()
     vectorstore.rebuild_index(db)
     return {"ok": True}
+
+
+@router.post("/ask", response_model=AskResponse)
+def ask(payload: AskRequest, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    start = time.time()
+    matches = vectorstore.query(payload.question, top_k=4)
+    chunk_texts = [m["content"] for m in matches]
+
+    answer = answer_question(payload.question, chunk_texts)
+    elapsed_ms = int((time.time() - start) * 1000)
+
+    chunk_id_to_doc = {}
+    if matches:
+        chunk_ids = [m["chunk_id"] for m in matches]
+        rows = db.query(DocumentChunk).filter(DocumentChunk.id.in_(chunk_ids)).all()
+        chunk_id_to_doc = {row.id: row for row in rows}
+
+    sources = []
+    for m in matches:
+        row = chunk_id_to_doc.get(m["chunk_id"])
+        if row:
+            sources.append(SourceOut(doc_title=row.document.title, chunk_text=m["content"][:400]))
+
+    question = Question(
+        user_id=user.id,
+        question_text=payload.question,
+        answer_text=answer,
+        source_chunk_ids=[m["chunk_id"] for m in matches],
+        response_time_ms=elapsed_ms,
+    )
+    db.add(question)
+    db.add(AuditLog(user_id=user.id, action="rag.question_asked", target_table="questions", target_id=question.id))
+    db.commit()
+    db.refresh(question)
+
+    return AskResponse(answer=answer, sources=sources, question_id=question.id)
+
+
+@router.post("/questions/{question_id}/feedback")
+def submit_feedback(
+    question_id: str,
+    payload: FeedbackRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    question = db.get(Question, question_id)
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    if payload.feedback not in ("helpful", "not_helpful"):
+        raise HTTPException(status_code=400, detail="feedback must be 'helpful' or 'not_helpful'")
+
+    question.feedback = payload.feedback
+    db.commit()
+    return {"ok": True}
+
+
+@router.get("/questions", response_model=list[QuestionOut])
+def list_questions(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+    feedback: str | None = Query(default=None),
+):
+    q = db.query(Question)
+    if feedback:
+        q = q.filter(Question.feedback == feedback)
+    return q.order_by(Question.created_at.desc()).all()
+
+
+@router.get("/stats", response_model=RagStats)
+def stats(db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    total = db.query(func.count(Question.id)).scalar() or 0
+    helpful = db.query(func.count(Question.id)).filter(Question.feedback == "helpful").scalar() or 0
+    not_helpful = db.query(func.count(Question.id)).filter(Question.feedback == "not_helpful").scalar() or 0
+    avg_ms = db.query(func.avg(Question.response_time_ms)).scalar() or 0.0
+
+    top = (
+        db.query(Question.question_text, func.count(Question.id).label("cnt"))
+        .group_by(Question.question_text)
+        .order_by(func.count(Question.id).desc())
+        .limit(5)
+        .all()
+    )
+
+    return RagStats(
+        total_questions=total,
+        helpful_count=helpful,
+        not_helpful_count=not_helpful,
+        unrated_count=total - helpful - not_helpful,
+        avg_response_time_ms=float(avg_ms),
+        top_questions=[t[0] for t in top],
+    )

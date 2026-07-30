@@ -7,11 +7,18 @@ class Settings(BaseSettings):
     secret_key: str = "dev-only-secret-change-me"
     access_token_expire_minutes: int = 480
 
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-opus-5"
+
     database_url: str = "sqlite:///./data/poste.db"
     upload_dir: str = "./data/uploads"
 
     admin_email: str = "admin@poste.tn"
     admin_password: str = "admin123"
+
+    @property
+    def ai_enabled(self) -> bool:
+        return bool(self.anthropic_api_key.strip())
 
 
 settings = Settings()

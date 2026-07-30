@@ -62,3 +62,16 @@ class DocumentChunk(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     document: Mapped["Document"] = relationship(back_populates="chunks")
+
+
+class Question(Base):
+    __tablename__ = "questions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_id)
+    user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), nullable=True)
+    question_text: Mapped[str] = mapped_column(Text, nullable=False)
+    answer_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_chunk_ids: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    feedback: Mapped[str | None] = mapped_column(String(20), nullable=True)  # helpful | not_helpful
+    response_time_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
