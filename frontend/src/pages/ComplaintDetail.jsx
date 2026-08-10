@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
+import Icon from "../components/Icon";
 
 export default function ComplaintDetail() {
   const { id } = useParams();
@@ -30,65 +31,76 @@ export default function ComplaintDetail() {
     }
   }
 
-  if (!complaint) return <p className="text-slate-400">Chargement...</p>;
+  if (!complaint) return <p className="text-on-surface-variant">Chargement...</p>;
+
+  const isReplied = complaint.status === "replied";
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Link to="/complaints" className="text-sm text-slate-500 hover:underline">
-        ← Retour
+      <Link to="/complaints" className="text-body-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+        <Icon name="arrow_back" style={{ fontSize: 16 }} />
+        Retour
       </Link>
-      <h1 className="text-lg font-bold text-slate-800 mt-2 mb-4">
+      <h1 className="text-headline-lg-mobile text-on-surface mt-3 mb-5">
         Réclamation de {complaint.customer_name || "(anonyme)"}
       </h1>
 
-      <div className="grid grid-cols-3 gap-3 mb-4 text-sm">
-        <div className="bg-white border border-slate-200 rounded-lg p-3">
-          <div className="text-slate-400">Catégorie</div>
-          <div className="font-medium">{complaint.category}</div>
+      <div className="grid grid-cols-3 gap-3 mb-5">
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-3">
+          <div className="text-label-md text-on-surface-variant uppercase">Catégorie</div>
+          <div className="text-body-md font-medium text-on-surface mt-1">{complaint.category}</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-3">
-          <div className="text-slate-400">Urgence</div>
-          <div className="font-medium">{complaint.urgency}</div>
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-3">
+          <div className="text-label-md text-on-surface-variant uppercase">Urgence</div>
+          <div className="text-body-md font-medium text-on-surface mt-1">{complaint.urgency}</div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-3">
-          <div className="text-slate-400">Statut</div>
-          <div className="font-medium">{complaint.status}</div>
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-3">
+          <div className="text-label-md text-on-surface-variant uppercase">Statut</div>
+          <div className="text-body-md font-medium text-on-surface mt-1">{complaint.status}</div>
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-4 mb-4">
-        <h2 className="text-sm font-semibold text-slate-700 mb-1">Texte original</h2>
-        <p className="text-sm text-slate-600 whitespace-pre-wrap">{complaint.raw_text}</p>
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 mb-4 relative">
+        <div className="absolute -top-3 left-4 bg-surface-container-lowest px-2 text-label-md text-outline">
+          Message original
+        </div>
+        <p className="text-body-sm text-on-surface whitespace-pre-wrap pt-1">{complaint.raw_text}</p>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-4 mb-4">
-        <h2 className="text-sm font-semibold text-slate-700 mb-1">Résumé IA</h2>
-        <p className="text-sm text-slate-600">{complaint.ai_summary}</p>
-      </div>
+      {complaint.ai_summary && (
+        <div className="bg-surface-container-lowest border border-outline-variant border-l-4 border-l-secondary-container rounded-lg shadow-card overflow-hidden mb-4">
+          <div className="bg-surface-container-low px-4 py-2.5 flex items-center gap-2 border-b border-outline-variant">
+            <Icon name="auto_awesome" className="text-secondary-container" style={{ fontSize: 18 }} />
+            <h4 className="text-label-md text-on-surface">Résumé IA</h4>
+          </div>
+          <p className="p-4 text-body-sm text-on-surface-variant">{complaint.ai_summary}</p>
+        </div>
+      )}
 
-      <form onSubmit={handleSend} className="bg-white border border-slate-200 rounded-xl p-4">
-        <h2 className="text-sm font-semibold text-slate-700 mb-2">
-          Réponse {complaint.status === "replied" ? "envoyée" : "(brouillon IA — modifiable)"}
+      <form onSubmit={handleSend} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+        <h2 className="text-label-md text-on-surface mb-2 flex items-center gap-1">
+          Réponse {isReplied ? "envoyée" : "(brouillon IA — modifiable)"}
         </h2>
         <textarea
-          className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm mb-3"
+          className="w-full border border-outline-variant rounded-lg px-3 py-2 text-body-sm text-on-surface bg-surface-container-lowest mb-3 focus:outline-none focus:ring-2 focus:ring-secondary-container/30 focus:border-secondary-container disabled:bg-surface-container-low disabled:text-on-surface-variant"
           rows={8}
           value={reply}
           onChange={(e) => setReply(e.target.value)}
-          disabled={complaint.status === "replied"}
+          disabled={isReplied}
         />
-        {complaint.status !== "replied" && (
+        {!isReplied && (
           <button
             disabled={busy}
-            className="bg-slate-900 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-slate-800 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-lg text-label-md hover:bg-primary-container transition-colors disabled:opacity-50"
           >
+            <Icon name="send" style={{ fontSize: 18 }} />
             {busy ? "Envoi..." : "Approuver et envoyer"}
           </button>
         )}
-        {complaint.status === "replied" && complaint.final_reply !== complaint.draft_reply && (
-          <p className="text-xs text-slate-400 mt-2">
-            Note : cette réponse a été modifiée par l'agent avant envoi (brouillon IA original conservé
-            dans l'historique).
+        {isReplied && complaint.final_reply !== complaint.draft_reply && (
+          <p className="text-body-sm text-on-surface-variant mt-2">
+            Note : cette réponse a été modifiée par l'agent avant envoi (brouillon IA original conservé dans
+            l'historique).
           </p>
         )}
       </form>
