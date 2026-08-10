@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
+import Icon from "../components/Icon";
 
 const STATUS_LABEL = { new: "Nouveau", reviewed: "Analysé", replied: "Répondu" };
-const URGENCY_COLOR = {
-  high: "bg-red-100 text-red-700",
-  medium: "bg-amber-100 text-amber-700",
-  low: "bg-slate-100 text-slate-600",
+const STATUS_STYLE = {
+  new: "text-primary bg-primary-fixed",
+  reviewed: "text-outline bg-surface-container-highest",
+  replied: "text-on-secondary-container bg-secondary-fixed",
 };
+const URGENCY_LABEL = { high: "Élevée", medium: "Moyenne", low: "Faible" };
+const URGENCY_STYLE = {
+  high: "bg-error-container text-on-error-container border-error/20",
+  medium: "bg-secondary-fixed text-on-secondary-fixed-variant border-secondary/20",
+  low: "bg-surface-container-high text-on-surface border-outline-variant",
+};
+const URGENCY_DOT = { high: "bg-error", medium: "bg-secondary", low: "bg-primary-container" };
 
 export default function Complaints() {
   const [complaints, setComplaints] = useState([]);
@@ -45,34 +53,43 @@ export default function Complaints() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-bold text-slate-800">Réclamations</h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-headline-lg text-on-surface">Triage des réclamations</h1>
+          <p className="text-body-sm text-on-surface-variant mt-1">
+            Gérez et répondez aux requêtes client avec l'assistance de l'IA.
+          </p>
+        </div>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="bg-slate-900 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-slate-800"
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-lg text-label-md hover:bg-primary-container transition-colors shadow-sm self-start"
         >
-          {showForm ? "Annuler" : "+ Nouvelle réclamation"}
+          <Icon name={showForm ? "close" : "add"} style={{ fontSize: 18 }} />
+          {showForm ? "Annuler" : "Nouvelle réclamation"}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-xl p-4 mb-6 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-card p-5 mb-6 space-y-3"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
-              className="border border-slate-300 rounded-md px-3 py-2 text-sm"
+              className="border border-outline-variant rounded px-3 py-2 text-body-sm bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary-container/30 focus:border-secondary-container"
               placeholder="Nom du client"
               value={form.customer_name}
               onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
             />
             <input
-              className="border border-slate-300 rounded-md px-3 py-2 text-sm"
+              className="border border-outline-variant rounded px-3 py-2 text-body-sm bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary-container/30 focus:border-secondary-container"
               placeholder="Contact (email/téléphone)"
               value={form.customer_contact}
               onChange={(e) => setForm({ ...form, customer_contact: e.target.value })}
             />
           </div>
           <textarea
-            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"
+            className="w-full border border-outline-variant rounded px-3 py-2 text-body-sm bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary-container/30 focus:border-secondary-container"
             rows={4}
             placeholder="Texte de la réclamation..."
             value={form.raw_text}
@@ -81,20 +98,23 @@ export default function Complaints() {
           />
           <button
             disabled={submitting}
-            className="bg-slate-900 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-slate-800 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-label-md hover:bg-primary-container transition-colors disabled:opacity-50"
           >
+            {submitting && <Icon name="autorenew" style={{ fontSize: 16 }} />}
             {submitting ? "Analyse IA en cours..." : "Soumettre et analyser"}
           </button>
         </form>
       )}
 
-      <div className="flex gap-2 mb-3 text-sm">
+      <div className="flex bg-surface-container-highest rounded-lg p-1 border border-outline-variant mb-4 w-fit text-body-sm">
         {["", "new", "reviewed", "replied"].map((s) => (
           <button
             key={s}
             onClick={() => setFilters((f) => ({ ...f, status: s || undefined }))}
-            className={`px-3 py-1 rounded-md ${
-              (filters.status || "") === s ? "bg-slate-900 text-white" : "bg-white border border-slate-200"
+            className={`px-3 py-1.5 rounded-md text-label-md transition-colors ${
+              (filters.status || "") === s
+                ? "bg-surface-container-lowest shadow-sm text-primary"
+                : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
             {s ? STATUS_LABEL[s] : "Tous"}
@@ -102,47 +122,58 @@ export default function Complaints() {
         ))}
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-left">
+      <div className="bg-surface-container-lowest border border-outline-variant shadow-card rounded-xl overflow-hidden">
+        <table className="w-full text-left border-collapse">
+          <thead className="bg-surface-container-low border-b border-outline-variant">
             <tr>
-              <th className="px-4 py-2">Client</th>
-              <th className="px-4 py-2">Catégorie</th>
-              <th className="px-4 py-2">Urgence</th>
-              <th className="px-4 py-2">Statut</th>
-              <th className="px-4 py-2">Créé le</th>
+              <th className="py-3 px-4 text-label-md text-on-surface-variant uppercase tracking-wider">Client</th>
+              <th className="py-3 px-4 text-label-md text-on-surface-variant uppercase tracking-wider">Catégorie</th>
+              <th className="py-3 px-4 text-label-md text-on-surface-variant uppercase tracking-wider">Urgence</th>
+              <th className="py-3 px-4 text-label-md text-on-surface-variant uppercase tracking-wider">Statut</th>
+              <th className="py-3 px-4 text-label-md text-on-surface-variant uppercase tracking-wider">Créé le</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-outline-variant/50">
             {loading && (
               <tr>
-                <td className="px-4 py-4 text-slate-400" colSpan={5}>
+                <td className="px-4 py-6 text-on-surface-variant text-body-sm" colSpan={5}>
                   Chargement...
                 </td>
               </tr>
             )}
             {!loading && complaints.length === 0 && (
               <tr>
-                <td className="px-4 py-4 text-slate-400" colSpan={5}>
+                <td className="px-4 py-6 text-on-surface-variant text-body-sm" colSpan={5}>
                   Aucune réclamation.
                 </td>
               </tr>
             )}
             {complaints.map((c) => (
-              <tr key={c.id} className="border-t border-slate-100 hover:bg-slate-50">
-                <td className="px-4 py-2">
-                  <Link to={`/complaints/${c.id}`} className="text-slate-800 font-medium hover:underline">
+              <tr key={c.id} className="hover:bg-surface-container-low transition-colors">
+                <td className="px-4 py-3">
+                  <Link to={`/complaints/${c.id}`} className="text-on-surface font-medium hover:text-primary transition-colors">
                     {c.customer_name || "(anonyme)"}
                   </Link>
                 </td>
-                <td className="px-4 py-2 text-slate-600">{c.category || "—"}</td>
-                <td className="px-4 py-2">
-                  <span className={`px-2 py-0.5 rounded text-xs ${URGENCY_COLOR[c.urgency] || ""}`}>
-                    {c.urgency || "—"}
+                <td className="px-4 py-3 text-body-sm text-on-surface-variant">{c.category || "—"}</td>
+                <td className="px-4 py-3">
+                  {c.urgency ? (
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] border ${URGENCY_STYLE[c.urgency] || ""}`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${URGENCY_DOT[c.urgency] || "bg-outline"}`} />
+                      {URGENCY_LABEL[c.urgency] || c.urgency}
+                    </span>
+                  ) : (
+                    <span className="text-on-surface-variant text-body-sm">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`text-label-md px-2 py-1 rounded ${STATUS_STYLE[c.status] || "text-on-surface-variant"}`}>
+                    {STATUS_LABEL[c.status] || c.status}
                   </span>
                 </td>
-                <td className="px-4 py-2 text-slate-600">{STATUS_LABEL[c.status] || c.status}</td>
-                <td className="px-4 py-2 text-slate-400 text-xs">
+                <td className="px-4 py-3 text-on-surface-variant text-body-sm">
                   {new Date(c.created_at).toLocaleString("fr-FR")}
                 </td>
               </tr>
