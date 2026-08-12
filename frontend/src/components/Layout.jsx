@@ -2,6 +2,7 @@ import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import Icon from "./Icon";
+import logo from "../assets/logo.png";
 
 function NavItem({ to, icon, children }) {
   return (
@@ -36,8 +37,8 @@ export default function Layout({ children }) {
     <div className="min-h-screen bg-surface">
       <nav className="fixed left-0 top-0 h-screen w-sidebar-width bg-primary text-on-primary flex flex-col py-8 px-4 shadow-md z-50">
         <div className="mb-10 flex items-center gap-3 px-2">
-          <div className="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center shrink-0">
-            <Icon name="mark_email_read" className="text-on-secondary-container" filled />
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shrink-0 p-1">
+            <img src={logo} alt="La Poste Tunisienne" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
             <h1 className="text-headline-sm font-bold text-on-primary truncate">Poste AI Suite</h1>

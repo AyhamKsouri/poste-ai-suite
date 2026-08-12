@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import Icon from "../components/Icon";
+import logo from "../assets/logo.png";
 
 export default function Login() {
   const { login } = useAuth();
@@ -45,9 +46,7 @@ export default function Login() {
       >
         <div className="text-center mb-8 flex flex-col items-center">
           <div className="flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded bg-secondary-container flex items-center justify-center">
-              <Icon name="mail" className="text-on-secondary-container" style={{ fontSize: 24 }} />
-            </div>
+            <img src={logo} alt="La Poste Tunisienne" className="w-10 h-10 object-contain" />
             <div className="flex flex-col text-left">
               <span className="text-headline-sm text-primary">La Poste Tunisienne</span>
               <span className="text-label-md text-on-surface-variant uppercase tracking-widest -mt-0.5">
