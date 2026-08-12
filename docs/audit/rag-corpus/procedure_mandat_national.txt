@@ -1,0 +1,19 @@
+Procédure : Envoi et retrait d'un mandat national
+
+Le mandat national permet de transférer de l'argent entre particuliers à l'intérieur du
+territoire tunisien, sans que l'expéditeur ni le bénéficiaire aient besoin d'un compte CCP.
+
+Pour l'envoi, l'expéditeur se présente dans n'importe quel bureau de poste avec :
+- Sa carte d'identité nationale (CIN)
+- Le nom complet et l'adresse du bénéficiaire
+- Le montant à envoyer
+
+Les frais d'envoi sont calculés selon la grille tarifaire en vigueur (voir la procédure de
+tarifs des services postaux) et sont à la charge de l'expéditeur, sauf accord contraire.
+
+Le bénéficiaire peut retirer le montant dans n'importe quel bureau de poste du pays sur
+présentation de sa CIN et du numéro de mandat communiqué par l'expéditeur. Le délai habituel
+entre l'émission et la disponibilité des fonds pour le retrait est de 24 à 48 heures.
+
+Comme pour le mandat international, un mandat national non retiré est retourné à l'expéditeur
+après un délai de 3 mois.
