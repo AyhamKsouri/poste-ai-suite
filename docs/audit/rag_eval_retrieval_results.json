@@ -1,0 +1,382 @@
+[
+  {
+    "id": "Q1",
+    "question": "Quel est le dépôt initial minimum pour ouvrir un compte CCP ?",
+    "expected_docs": [
+      "sample_procedure_ccp"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "sample_procedure_ccp",
+        "similarity": 0.2984
+      },
+      {
+        "doc_title": "procedure_epargne",
+        "similarity": 0.2483
+      },
+      {
+        "doc_title": "procedure_tarifs",
+        "similarity": 0.2229
+      }
+    ]
+  },
+  {
+    "id": "Q2",
+    "question": "Quels documents sont nécessaires pour ouvrir un compte CCP ?",
+    "expected_docs": [
+      "sample_procedure_ccp"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "sample_procedure_ccp",
+        "similarity": 0.3799
+      },
+      {
+        "doc_title": "procedure_epargne",
+        "similarity": 0.1321
+      }
+    ]
+  },
+  {
+    "id": "Q3",
+    "question": "Quel est le montant maximum autorisé pour un mandat international ?",
+    "expected_docs": [
+      "procedure_mandat_international"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_mandat_national",
+        "similarity": 0.1631
+      },
+      {
+        "doc_title": "procedure_mandat_international",
+        "similarity": 0.1436
+      },
+      {
+        "doc_title": "procedure_colis_postal",
+        "similarity": 0.1424
+      }
+    ]
+  },
+  {
+    "id": "Q4",
+    "question": "Après combien de temps un mandat international non retiré est-il retourné à l'expéditeur ?",
+    "expected_docs": [
+      "procedure_mandat_international"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_mandat_national",
+        "similarity": 0.3829
+      },
+      {
+        "doc_title": "procedure_mandat_international",
+        "similarity": 0.2208
+      }
+    ]
+  },
+  {
+    "id": "Q5",
+    "question": "Quel est le poids maximum autorisé pour un colis postal ?",
+    "expected_docs": [
+      "procedure_colis_postal"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_colis_postal",
+        "similarity": 0.3504
+      }
+    ]
+  },
+  {
+    "id": "Q6",
+    "question": "Quel est le dépôt initial minimum pour ouvrir un Livret Poste ?",
+    "expected_docs": [
+      "procedure_epargne"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_epargne",
+        "similarity": 0.3547
+      },
+      {
+        "doc_title": "procedure_tarifs",
+        "similarity": 0.2303
+      },
+      {
+        "doc_title": "sample_procedure_ccp",
+        "similarity": 0.2034
+      }
+    ]
+  },
+  {
+    "id": "Q7",
+    "question": "Quel est le plafond de retrait quotidien standard de la carte e-Dinar Post ?",
+    "expected_docs": [
+      "procedure_edinar"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_edinar",
+        "similarity": 0.446
+      }
+    ]
+  },
+  {
+    "id": "Q8",
+    "question": "Combien de temps faut-il pour la fabrication de la carte e-Dinar Post ?",
+    "expected_docs": [
+      "procedure_edinar"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_edinar",
+        "similarity": 0.3778
+      }
+    ]
+  },
+  {
+    "id": "Q9",
+    "question": "Quel est le délai de traitement d'une réclamation pour un colis perdu ou endommagé ?",
+    "expected_docs": [
+      "procedure_reclamation"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_reclamation",
+        "similarity": 0.3163
+      },
+      {
+        "doc_title": "procedure_colis_postal",
+        "similarity": 0.2575
+      }
+    ]
+  },
+  {
+    "id": "Q10",
+    "question": "Quelle est la durée de validité d'une procuration postale ?",
+    "expected_docs": [
+      "procedure_procuration"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_procuration",
+        "similarity": 0.5009
+      },
+      {
+        "doc_title": "procedure_mandat_international",
+        "similarity": 0.2175
+      }
+    ]
+  },
+  {
+    "id": "Q11",
+    "question": "Quel est le dépôt minimum pour ouvrir un CCP et quels sont les frais d'un mandat national de 100 dinars ?",
+    "expected_docs": [
+      "sample_procedure_ccp",
+      "procedure_tarifs",
+      "procedure_mandat_national"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_tarifs",
+        "similarity": 0.3819
+      },
+      {
+        "doc_title": "sample_procedure_ccp",
+        "similarity": 0.2343
+      },
+      {
+        "doc_title": "procedure_mandat_national",
+        "similarity": 0.2276
+      },
+      {
+        "doc_title": "procedure_epargne",
+        "similarity": 0.16
+      }
+    ]
+  },
+  {
+    "id": "Q12",
+    "question": "Quels documents d'identité faut-il pour ouvrir un CCP et pour retirer un mandat international ?",
+    "expected_docs": [
+      "sample_procedure_ccp",
+      "procedure_mandat_international"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "sample_procedure_ccp",
+        "similarity": 0.3365
+      },
+      {
+        "doc_title": "procedure_mandat_international",
+        "similarity": 0.1841
+      },
+      {
+        "doc_title": "procedure_mandat_national",
+        "similarity": 0.1781
+      }
+    ]
+  },
+  {
+    "id": "Q13",
+    "question": "Quel est le dépôt minimum pour un Livret Poste et le tarif d'un colis de 3 kg ?",
+    "expected_docs": [
+      "procedure_epargne",
+      "procedure_tarifs",
+      "procedure_colis_postal"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_tarifs",
+        "similarity": 0.4569
+      },
+      {
+        "doc_title": "procedure_epargne",
+        "similarity": 0.2289
+      },
+      {
+        "doc_title": "procedure_colis_postal",
+        "similarity": 0.2079
+      },
+      {
+        "doc_title": "procedure_reclamation",
+        "similarity": 0.1509
+      }
+    ]
+  },
+  {
+    "id": "Q14",
+    "question": "Quel est le délai de traitement d'une réclamation pour un colis perdu, et après combien de temps un mandat international non retiré est-il renvoyé à l'expéditeur ?",
+    "expected_docs": [
+      "procedure_reclamation",
+      "procedure_mandat_international"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_mandat_national",
+        "similarity": 0.3138
+      },
+      {
+        "doc_title": "procedure_reclamation",
+        "similarity": 0.2708
+      },
+      {
+        "doc_title": "procedure_colis_postal",
+        "similarity": 0.2097
+      },
+      {
+        "doc_title": "procedure_mandat_international",
+        "similarity": 0.1833
+      }
+    ]
+  },
+  {
+    "id": "Q15",
+    "question": "Quels documents faut-il pour établir une procuration postale, et quel est le délai de mise à disposition des fonds d'un mandat international ?",
+    "expected_docs": [
+      "procedure_procuration",
+      "procedure_mandat_international"
+    ],
+    "retrieved": [
+      {
+        "doc_title": "procedure_mandat_international",
+        "similarity": 0.3716
+      },
+      {
+        "doc_title": "procedure_procuration",
+        "similarity": 0.3198
+      },
+      {
+        "doc_title": "sample_procedure_ccp",
+        "similarity": 0.1883
+      },
+      {
+        "doc_title": "procedure_mandat_national",
+        "similarity": 0.1365
+      }
+    ]
+  },
+  {
+    "id": "Q16",
+    "question": "Quels sont les horaires d'ouverture des bureaux de poste le vendredi ?",
+    "expected_docs": [],
+    "retrieved": [
+      {
+        "doc_title": "procedure_epargne",
+        "similarity": 0.2402
+      },
+      {
+        "doc_title": "sample_procedure_ccp",
+        "similarity": 0.1875
+      },
+      {
+        "doc_title": "procedure_reclamation",
+        "similarity": 0.149
+      }
+    ]
+  },
+  {
+    "id": "Q17",
+    "question": "Comment postuler à un emploi à La Poste Tunisienne ?",
+    "expected_docs": [],
+    "retrieved": [
+      {
+        "doc_title": "procedure_epargne",
+        "similarity": 0.3024
+      },
+      {
+        "doc_title": "procedure_edinar",
+        "similarity": 0.1562
+      },
+      {
+        "doc_title": "procedure_reclamation",
+        "similarity": 0.1531
+      }
+    ]
+  },
+  {
+    "id": "Q18",
+    "question": "Quel est le tarif d'envoi d'un colis vers la France ?",
+    "expected_docs": [],
+    "retrieved": [
+      {
+        "doc_title": "procedure_colis_postal",
+        "similarity": 0.3514
+      },
+      {
+        "doc_title": "procedure_tarifs",
+        "similarity": 0.1711
+      }
+    ]
+  },
+  {
+    "id": "Q19",
+    "question": "Comment réinitialiser mon mot de passe sur MyPoste ?",
+    "expected_docs": [],
+    "retrieved": []
+  },
+  {
+    "id": "Q20",
+    "question": "Quelle est la procédure pour obtenir une carte SIM Poste Mobile ?",
+    "expected_docs": [],
+    "retrieved": [
+      {
+        "doc_title": "procedure_edinar",
+        "similarity": 0.366
+      },
+      {
+        "doc_title": "procedure_epargne",
+        "similarity": 0.2404
+      },
+      {
+        "doc_title": "sample_procedure_ccp",
+        "similarity": 0.1421
+      },
+      {
+        "doc_title": "procedure_mandat_national",
+        "similarity": 0.1288
+      }
+    ]
+  }
+]

@@ -1,0 +1,212 @@
+[
+  {
+    "id": "Q1",
+    "question": "Quel est le dépôt initial minimum pour ouvrir un compte CCP ?",
+    "answer": "Le dépôt initial minimum pour ouvrir un compte CCP est de **5 dinars tunisiens**.",
+    "sources": [
+      "sample_procedure_ccp",
+      "procedure_epargne",
+      "procedure_tarifs"
+    ],
+    "elapsed_s": 0.68
+  },
+  {
+    "id": "Q2",
+    "question": "Quels documents sont nécessaires pour ouvrir un compte CCP ?",
+    "answer": "Pour ouvrir un compte CCP à La Poste Tunisienne, le client doit fournir :\n\n- Une carte d’identité nationale (CIN) en cours de validité  \n- Un justificatif de domicile récent (facture STEG ou SONEDE de moins de 3 mois)  \n- Un dépôt initial minimum de 5 dinars tunisiens.",
+    "sources": [
+      "sample_procedure_ccp",
+      "procedure_epargne"
+    ],
+    "elapsed_s": 0.8
+  },
+  {
+    "id": "Q3",
+    "question": "Quel est le montant maximum autorisé pour un mandat international ?",
+    "answer": "Le montant maximal autorisé pour un mandat international est de **2 000 dinars tunisiens par opération**.",
+    "sources": [
+      "procedure_mandat_national",
+      "procedure_mandat_international",
+      "procedure_colis_postal"
+    ],
+    "elapsed_s": 0.57
+  },
+  {
+    "id": "Q4",
+    "question": "Après combien de temps un mandat international non retiré est-il retourné à l'expéditeur ?",
+    "answer": "Un mandat international qui n’est pas retiré est retourné à l’expéditeur **au bout de 3 mois** à compter de sa date d’émission.",
+    "sources": [
+      "procedure_mandat_national",
+      "procedure_mandat_international"
+    ],
+    "elapsed_s": 0.5
+  },
+  {
+    "id": "Q5",
+    "question": "Quel est le poids maximum autorisé pour un colis postal ?",
+    "answer": "Le poids maximum autorisé pour un colis postal est de **30 kilogrammes** par colis.",
+    "sources": [
+      "procedure_colis_postal"
+    ],
+    "elapsed_s": 3.59
+  },
+  {
+    "id": "Q6",
+    "question": "Quel est le dépôt initial minimum pour ouvrir un Livret Poste ?",
+    "answer": "Le dépôt initial minimum requis pour ouvrir un Livret Poste est de **10 dinars tunisiens**.",
+    "sources": [
+      "procedure_epargne",
+      "procedure_tarifs",
+      "sample_procedure_ccp"
+    ],
+    "elapsed_s": 7.59
+  },
+  {
+    "id": "Q7",
+    "question": "Quel est le plafond de retrait quotidien standard de la carte e-Dinar Post ?",
+    "answer": "Le plafond de retrait quotidien standard de la carte e‑Dinar Post est de **1 000 dinars tunisiens**.",
+    "sources": [
+      "procedure_edinar"
+    ],
+    "elapsed_s": 4.5
+  },
+  {
+    "id": "Q8",
+    "question": "Combien de temps faut-il pour la fabrication de la carte e-Dinar Post ?",
+    "answer": "Le délai de fabrication de la carte e‑Dinar Post est d’environ **10 jours ouvrables**.",
+    "sources": [
+      "procedure_edinar"
+    ],
+    "elapsed_s": 4.65
+  },
+  {
+    "id": "Q9",
+    "question": "Quel est le délai de traitement d'une réclamation pour un colis perdu ou endommagé ?",
+    "answer": "Le délai indicatif de traitement d’une réclamation pour un colis perdu ou endommagé est de **15 jours ouvrables** pour obtenir une réponse.",
+    "sources": [
+      "procedure_reclamation",
+      "procedure_colis_postal"
+    ],
+    "elapsed_s": 5.53
+  },
+  {
+    "id": "Q10",
+    "question": "Quelle est la durée de validité d'une procuration postale ?",
+    "answer": "La procuration postale est valable **6 mois** à compter de sa date d’établissement, avec possibilité de renouvellement sur demande.",
+    "sources": [
+      "procedure_procuration",
+      "procedure_mandat_international"
+    ],
+    "elapsed_s": 6.51
+  },
+  {
+    "id": "Q11",
+    "question": "Quel est le dépôt minimum pour ouvrir un CCP et quels sont les frais d'un mandat national de 100 dinars ?",
+    "answer": "Le dépôt minimum requis pour ouvrir un compte CCP est de **5 dinars tunisiens**.\n\nPour un mandat national de 100 dinars, les frais sont calculés à **3 % du montant**, soit 3 dinars tunisiens (le minimum de 2 dinars n’est pas appliqué car le calcul donne un montant supérieur).",
+    "sources": [
+      "procedure_tarifs",
+      "sample_procedure_ccp",
+      "procedure_mandat_national",
+      "procedure_epargne"
+    ],
+    "elapsed_s": 10.94
+  },
+  {
+    "id": "Q12",
+    "question": "Quels documents d'identité faut-il pour ouvrir un CCP et pour retirer un mandat international ?",
+    "answer": "**Ouverture d’un compte CCP**  \n- Carte d’identité nationale (CIN) en cours de validité ; c’est le seul document d’identité exigé (le justificatif de domicile est requis en plus, mais il ne s’agit pas d’un document d’identité).\n\n**Retrait d’un mandat international**  \n- Le bénéficiaire doit présenter **une pièce d’identité** (par exemple la CIN) ainsi que le **numéro de référence du mandat** qui lui a été remis lors de l’envoi.  \n\nCes deux exigences sont celles qui figurent dans les procédures internes.",
+    "sources": [
+      "sample_procedure_ccp",
+      "procedure_mandat_international",
+      "procedure_mandat_national"
+    ],
+    "elapsed_s": 9.2
+  },
+  {
+    "id": "Q13",
+    "question": "Quel est le dépôt minimum pour un Livret Poste et le tarif d'un colis de 3 kg ?",
+    "answer": "Le dépôt minimum pour l’ouverture d’un Livret Poste est de **10 dinars tunisiens**.\n\nPour un colis national de **3 kg**, le tarif applicable est de **6 dinars tunisiens** (palier de 1 à 5 kg).",
+    "sources": [
+      "procedure_tarifs",
+      "procedure_epargne",
+      "procedure_colis_postal",
+      "procedure_reclamation"
+    ],
+    "elapsed_s": 13.97
+  },
+  {
+    "id": "Q14",
+    "question": "Quel est le délai de traitement d'une réclamation pour un colis perdu, et après combien de temps un mandat international non retiré est-il renvoyé à l'expéditeur ?",
+    "answer": "- **Réclamation pour un colis perdu :** le délai indicatif de traitement est de **15 jours ouvrables** pour obtenir une réponse.  \n- **Mandat international non retiré :** il est **retourné à l’expéditeur après 3 mois** à compter de la date d’émission, si le bénéficiaire ne s’est pas présenté.",
+    "sources": [
+      "procedure_mandat_national",
+      "procedure_reclamation",
+      "procedure_colis_postal",
+      "procedure_mandat_international"
+    ],
+    "elapsed_s": 12.16
+  },
+  {
+    "id": "Q15",
+    "question": "Quels documents faut-il pour établir une procuration postale, et quel est le délai de mise à disposition des fonds d'un mandat international ?",
+    "answer": "**Documents nécessaires pour établir une procuration postale**  \n- Votre carte d’identité nationale (CIN) ;  \n- La carte d’identité nationale (CIN) du mandataire, ou une copie de celle‑ci ;  \n- Le formulaire de procuration postale, dûment rempli et signé par le mandant.  \n\n*(Selon le type d’opération, une légalisation de signature auprès de la municipalité peut être exigée.)*  \n\n**Délai de mise à disposition des fonds d’un mandat international**  \n- Les fonds sont généralement disponibles à l’étranger **entre 5 et 7 jours ouvrables** après l’émission du mandat.  ",
+    "sources": [
+      "procedure_mandat_international",
+      "procedure_procuration",
+      "sample_procedure_ccp",
+      "procedure_mandat_national"
+    ],
+    "elapsed_s": 10.47
+  },
+  {
+    "id": "Q16",
+    "question": "Quels sont les horaires d'ouverture des bureaux de poste le vendredi ?",
+    "answer": "Je suis désolé, les documents internes fournis ne précisent pas les horaires d’ouverture des bureaux de poste le vendredi. N’hésitez pas à me poser une autre question relative aux procédures ou aux services de La Poste Tunisienne.",
+    "sources": [
+      "procedure_epargne",
+      "sample_procedure_ccp",
+      "procedure_reclamation"
+    ],
+    "elapsed_s": 9.76
+  },
+  {
+    "id": "Q17",
+    "question": "Comment postuler à un emploi à La Poste Tunisienne ?",
+    "answer": "Je suis désolé, mais les documents internes fournis ne contiennent pas d'information sur la procédure de candidature à un emploi au sein de La Poste Tunisienne.",
+    "sources": [
+      "procedure_epargne",
+      "procedure_edinar",
+      "procedure_reclamation"
+    ],
+    "elapsed_s": 8.82
+  },
+  {
+    "id": "Q18",
+    "question": "Quel est le tarif d'envoi d'un colis vers la France ?",
+    "answer": "Je n’ai pas cette information dans les documents internes ; les tarifs d’envoi des colis internationaux (comme vers la France) sont communiqués au guichet au moment de la prise en charge.",
+    "sources": [
+      "procedure_colis_postal",
+      "procedure_tarifs"
+    ],
+    "elapsed_s": 7.94
+  },
+  {
+    "id": "Q19",
+    "question": "Comment réinitialiser mon mot de passe sur MyPoste ?",
+    "answer": "Je ne dispose d'aucune information dans les documents internes concernant la réinitialisation du mot de passe sur MyPoste. N'hésitez pas à poser une autre question relative aux procédures internes.",
+    "sources": [],
+    "elapsed_s": 2.74
+  },
+  {
+    "id": "Q20",
+    "question": "Quelle est la procédure pour obtenir une carte SIM Poste Mobile ?",
+    "answer": "Je ne dispose pas de cette information dans les documents internes.",
+    "sources": [
+      "procedure_edinar",
+      "procedure_epargne",
+      "sample_procedure_ccp",
+      "procedure_mandat_national"
+    ],
+    "elapsed_s": 10.85
+  }
+]
