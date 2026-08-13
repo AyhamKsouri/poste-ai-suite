@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -25,7 +25,11 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(user_id: str) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
+    # datetime.utcnow() is naive - PyJWT's internal .timestamp() call on a naive
+    # datetime interprets it in the server's LOCAL timezone, not UTC, which is a
+    # correctness bug on any server not itself running in UTC. now(timezone.utc)
+    # is unambiguous regardless of server timezone.
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {"sub": user_id, "exp": expire}
     return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM)
 

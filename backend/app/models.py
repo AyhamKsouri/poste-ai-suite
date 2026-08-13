@@ -86,6 +86,9 @@ class Complaint(Base):
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
     category: Mapped[str | None] = mapped_column(String(50), nullable=True)
     urgency: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # QA audit finding M8: classification previously had no confidence signal at
+    # all, so gibberish/empty complaints were auto-triaged with false certainty.
+    confidence: Mapped[float | None] = mapped_column(nullable=True)
     ai_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     draft_reply: Mapped[str | None] = mapped_column(Text, nullable=True)
     final_reply: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
-
+from pydantic import BaseModel, ConfigDict
 
 # ---- Auth ----
 
@@ -21,8 +20,7 @@ class UserOut(BaseModel):
     office: str | None = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LoginRequest(BaseModel):
@@ -44,8 +42,7 @@ class DocumentOut(BaseModel):
     status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ChatTurn(BaseModel):
@@ -81,8 +78,7 @@ class QuestionOut(BaseModel):
     response_time_ms: int | None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RagStats(BaseModel):
@@ -109,6 +105,7 @@ class ComplaintOut(BaseModel):
     raw_text: str
     category: str | None
     urgency: str | None
+    confidence: float | None
     ai_summary: str | None
     draft_reply: str | None
     final_reply: str | None
@@ -116,8 +113,7 @@ class ComplaintOut(BaseModel):
     created_at: datetime
     replied_at: datetime | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ReplyRequest(BaseModel):

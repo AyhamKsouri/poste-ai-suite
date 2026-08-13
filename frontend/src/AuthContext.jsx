@@ -16,7 +16,17 @@ export function AuthProvider({ children }) {
     api
       .me()
       .then(setUser)
-      .catch(() => setToken(null))
+      .catch(() => {
+        // QA audit finding M2: this used to unconditionally clear the token on
+        // ANY failure here, including a pure network error (backend
+        // unreachable) - silently discarding a perfectly valid session. An
+        // actual invalid/expired token (401) is already handled at the source
+        // in api/client.js's request(), which clears the token and redirects
+        // itself before this ever runs. Anything that reaches this catch is
+        // therefore NOT a confirmed bad token, so the stored token is left
+        // alone - the user sees the login screen for this page load, but a
+        // reload once the backend recovers logs them back in transparently.
+      })
       .finally(() => setLoading(false));
   }, []);
 

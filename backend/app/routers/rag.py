@@ -1,7 +1,7 @@
+import logging
 import os
 import time
 import uuid
-from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from sqlalchemy import func
@@ -24,9 +24,17 @@ from app.services import vectorstore
 from app.services.ai_client import answer_question
 from app.services.documents import chunk_text, extract_text
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/rag", tags=["rag"])
 
 os.makedirs(settings.upload_dir, exist_ok=True)
+
+# QA audit finding M5: no size/type limit existed at all, and the file was
+# read fully into memory unbounded, feeding a pypdf version with many known
+# parser-crash advisories.
+MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+ALLOWED_UPLOAD_EXTENSIONS = {".pdf", ".docx", ".txt"}
 
 
 @router.post("/documents", response_model=DocumentOut)
@@ -35,12 +43,26 @@ def upload_document(
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
 ):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in ALLOWED_UPLOAD_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '{ext}'. Allowed: {', '.join(sorted(ALLOWED_UPLOAD_EXTENSIONS))}",
+        )
+
     doc_id = str(uuid.uuid4())
     safe_name = f"{doc_id}_{os.path.basename(file.filename)}"
     file_path = os.path.join(settings.upload_dir, safe_name)
 
+    content = file.file.read(MAX_UPLOAD_SIZE_BYTES + 1)
+    if len(content) > MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File exceeds the {MAX_UPLOAD_SIZE_BYTES // (1024 * 1024)}MB upload limit",
+        )
+
     with open(file_path, "wb") as f:
-        f.write(file.file.read())
+        f.write(content)
 
     document = Document(
         id=doc_id,
@@ -70,6 +92,7 @@ def upload_document(
             )
         document.status = "ready"
     except Exception:
+        logger.exception("Document text extraction/chunking failed for document_id=%s", doc_id)
         document.status = "failed"
 
     db.add(AuditLog(user_id=admin.id, action="rag.document_uploaded", target_table="documents", target_id=doc_id))
