@@ -80,7 +80,7 @@ export default function Dashboard() {
       <header>
         <h1 className="text-headline-lg text-on-surface">Tableau de bord</h1>
         <p className="text-body-md text-on-surface-variant mt-1">
-          Analyse des performances de l'assistant IA et du traitement des réclamations.
+          Analyse des performances de l&apos;assistant IA et du traitement des réclamations.
         </p>
       </header>
 

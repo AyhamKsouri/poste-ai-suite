@@ -19,7 +19,7 @@ Two AI modules on one platform, built for La Poste Tunisienne:
   <img src="docs/screenshots/dashboard.jpg" width="32%" alt="Dashboard" />
 </p>
 
-A full write-up with more detail (architecture, AI design decisions, screenshots) lives in [`docs/rapport-avancement.html`](docs/rapport-avancement.html).
+A full write-up with more detail (architecture, AI design decisions, screenshots) lives in [`docs/rapport-avancement.html`](docs/rapport-avancement.html). For a technical orientation (request flow, mock-fallback contract, migrations, Docker), see [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## How it's built
 
@@ -52,9 +52,10 @@ Made for a fast local setup with no extra installs:
 
 | Spec said | This uses | Why |
 |---|---|---|
-| PostgreSQL + Docker Compose | SQLite, no Docker | Zero install; same SQLAlchemy models, swap the connection string later if you want Postgres |
+| PostgreSQL | SQLite | Zero install; same SQLAlchemy models, swap the connection string later if you want Postgres |
 | ChromaDB (embedding vector store) | scikit-learn TF-IDF + cosine similarity | ChromaDB's `hnswlib` dependency needs a C++ compiler not installed on this machine; TF-IDF needs no compiler and works well for procedure-document retrieval |
-| Alembic migrations | `Base.metadata.create_all()` on startup | No migration history needed for a fresh SQLite file |
+
+Docker Compose and Alembic migrations, both originally listed as deviations, have since been added — see [`ARCHITECTURE.md`](ARCHITECTURE.md) for how the dev-oriented `docker-compose.yml` and the migration workflow actually work.
 
 Everything else (auth, schema, endpoints, prompt-injection-safe AI prompts) matches the spec.
 

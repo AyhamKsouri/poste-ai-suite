@@ -16,6 +16,12 @@ from app.models import DocumentChunk
 # Below this similarity, we treat retrieval as "nothing relevant found" (Goal A3).
 MIN_RELEVANCE = 0.12
 
+# Above this similarity to a chunk already picked for this result set, a candidate
+# is treated as a near-duplicate (e.g. two near-identical "mandat" procedure docs)
+# and skipped, so a genuinely different second document gets the context slot
+# instead of two chunks saying almost the same thing.
+DEDUP_THRESHOLD = 0.9
+
 # TF-IDF's IDF weighting degenerates with a tiny corpus (a single document can't
 # tell "common word" from "meaningful word" apart), which lets French function
 # words create spurious matches for unrelated questions. Stripping them out
@@ -55,13 +61,20 @@ def query(question: str, top_k: int = 4) -> list[dict]:
 
     vec = _state["vectorizer"].transform([question])
     sims = cosine_similarity(vec, _state["matrix"])[0]
-    ranked = sims.argsort()[::-1][:top_k]
+    ranked = sims.argsort()[::-1]
 
     out = []
+    selected_idx = []
     for idx in ranked:
+        if len(out) >= top_k:
+            break
         similarity = float(sims[idx])
         if similarity < MIN_RELEVANCE:
-            continue
+            break
+        if selected_idx:
+            dup_sims = cosine_similarity(_state["matrix"][idx], _state["matrix"][selected_idx])[0]
+            if dup_sims.max() >= DEDUP_THRESHOLD:
+                continue
         out.append(
             {
                 "chunk_id": _state["chunk_ids"][idx],
@@ -69,4 +82,5 @@ def query(question: str, top_k: int = 4) -> list[dict]:
                 "similarity": similarity,
             }
         )
+        selected_idx.append(idx)
     return out

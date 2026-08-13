@@ -72,12 +72,12 @@ def test_upload_corrupted_pdf_triggers_exception_branch(client, admin_headers):
 
 def test_list_complaints_category_and_urgency_filters(client, agent_headers):
     created = client.post("/complaints", json={"raw_text": "Colis perdu depuis 2 semaines, introuvable."}, headers=agent_headers)
-    category = created.json()["category"]
+    category = created.json()["categories"][0]
     urgency = created.json()["urgency"]
 
     by_category = client.get("/complaints", params={"category": category}, headers=agent_headers)
     assert by_category.status_code == 200
-    assert all(c["category"] == category for c in by_category.json())
+    assert all(category in c["categories"] for c in by_category.json())
 
     by_urgency = client.get("/complaints", params={"urgency": urgency}, headers=agent_headers)
     assert by_urgency.status_code == 200
@@ -108,28 +108,30 @@ def test_list_questions_with_feedback_filter(client, admin_headers, agent_header
 
 
 def test_submit_complaint_money_order_category_mock_path(client, agent_headers):
-    """Exercises the new 'money_order_issue' branch of _mock_classify
-    (ai_client.py:102-103), added for finding M7 (the taxonomy previously had
-    no category for mandat/money-order complaints)."""
+    """Exercises the 'money_order_issue' branch of _mock_classify, added for
+    finding M7 (the taxonomy previously had no category for mandat/money-order
+    complaints). This text also matches the delivery_delay keywords ("toujours
+    pas arrive") - a real multi-issue complaint, so both categories are
+    expected under the multi-label classifier."""
     resp = client.post(
         "/complaints",
         json={"raw_text": "Mon mandat envoye il y a 10 jours n'est toujours pas arrive."},
         headers=agent_headers,
     )
     assert resp.status_code == 200
-    assert resp.json()["category"] == "money_order_issue"
+    assert "money_order_issue" in resp.json()["categories"]
 
 
 def test_submit_complaint_billing_category_mock_path(client, agent_headers):
-    """Exercises the 'billing' branch of _mock_classify (ai_client.py:89-90),
-    unreached by the other complaint tests' wording."""
+    """Exercises the 'billing' branch of _mock_classify, unreached by the
+    other complaint tests' wording."""
     resp = client.post(
         "/complaints",
         json={"raw_text": "Le montant facturé sur ma facture est incorrect, paiement en trop."},
         headers=agent_headers,
     )
     assert resp.status_code == 200
-    assert resp.json()["category"] == "billing"
+    assert resp.json()["categories"] == ["billing"]
 
 
 def test_ask_thanks_and_greeting_mock_replies(client, agent_headers):

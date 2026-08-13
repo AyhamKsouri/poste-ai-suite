@@ -23,7 +23,11 @@ def test_submit_complaint_happy_path(client, agent_headers):
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "reviewed"  # set after AI triage in complaints.py:39
-    assert body["category"] in ("delivery_delay", "lost_package", "billing", "damaged_item", "other")
+    assert body["categories"]
+    assert all(
+        c in ("delivery_delay", "lost_package", "billing", "damaged_item", "money_order_issue", "other")
+        for c in body["categories"]
+    )
     assert body["urgency"] in ("low", "medium", "high")
     assert body["draft_reply"]
 
@@ -82,9 +86,9 @@ def test_submit_complaint_emoji(client, agent_headers):
 def test_submit_complaint_gibberish(client, agent_headers):
     resp = client.post("/complaints", json={"raw_text": "asdkj alksjd 12903 !@#$%^ xxxxxxx zzz"}, headers=agent_headers)
     assert resp.status_code == 200
-    # mock classifier should still produce a category/urgency, never null/crash
+    # mock classifier should still produce categories/urgency, never empty/crash
     body = resp.json()
-    assert body["category"] is not None
+    assert body["categories"]
     assert body["urgency"] is not None
 
 
@@ -180,6 +184,37 @@ def test_reply_nonexistent_complaint(client, agent_headers):
         headers=agent_headers,
     )
     assert resp.status_code == 404
+
+
+def test_reply_twice_second_agent_gets_conflict(client, agent_headers, admin_headers):
+    """A complaint is a shared queue (any agent can see/act on any complaint by
+    design), but once one agent replies it must be locked - otherwise a second
+    agent racing to the same ticket silently overwrites the first agent's reply."""
+    created = client.post("/complaints", json=TUNISIAN_COMPLAINT, headers=agent_headers)
+    cid = created.json()["id"]
+
+    first = client.patch(
+        f"/complaints/{cid}/reply", json={"final_reply": "Première réponse."}, headers=agent_headers
+    )
+    assert first.status_code == 200
+
+    second = client.patch(
+        f"/complaints/{cid}/reply", json={"final_reply": "Réponse d'un collègue."}, headers=admin_headers
+    )
+    assert second.status_code == 409
+
+    # confirm the first agent's reply was NOT overwritten
+    final = client.get(f"/complaints/{cid}", headers=agent_headers)
+    assert final.json()["final_reply"] == "Première réponse."
+
+
+def test_update_status_after_reply_is_locked(client, agent_headers):
+    created = client.post("/complaints", json=TUNISIAN_COMPLAINT, headers=agent_headers)
+    cid = created.json()["id"]
+    client.patch(f"/complaints/{cid}/reply", json={"final_reply": "Réponse."}, headers=agent_headers)
+
+    resp = client.patch(f"/complaints/{cid}/status", json={"status": "new"}, headers=agent_headers)
+    assert resp.status_code == 409
 
 
 def test_update_status_happy_path(client, agent_headers):

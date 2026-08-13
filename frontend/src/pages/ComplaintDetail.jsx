@@ -40,7 +40,12 @@ export default function ComplaintDetail() {
       await api.replyComplaint(id, reply);
       await load();
     } catch (err) {
-      setSendError(err.message || "Échec de l'envoi de la réponse.");
+      if (err.status === 409) {
+        setSendError("Ce dossier a été traité par un collègue entre-temps.");
+        await load();
+      } else {
+        setSendError(err.message || "Échec de l'envoi de la réponse.");
+      }
     } finally {
       setBusy(false);
     }
@@ -87,9 +92,22 @@ export default function ComplaintDetail() {
 
       <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-3">
-          <div className="text-label-md text-on-surface-variant uppercase">Catégorie</div>
+          <div className="text-label-md text-on-surface-variant uppercase">Catégorie{complaint.categories?.length > 1 ? "s" : ""}</div>
           <div className="text-body-md font-medium text-on-surface mt-1">
-            {complaint.category ? CATEGORY_LABEL[complaint.category] || complaint.category : "—"}
+            {complaint.categories && complaint.categories.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {complaint.categories.map((cat) => (
+                  <span
+                    key={cat}
+                    className="px-2 py-0.5 rounded-full text-[11px] bg-surface-container-highest text-on-surface-variant border border-outline-variant"
+                  >
+                    {CATEGORY_LABEL[cat] || cat}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              "—"
+            )}
           </div>
         </div>
         <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-3">
@@ -150,8 +168,8 @@ export default function ComplaintDetail() {
         )}
         {isReplied && complaint.final_reply !== complaint.draft_reply && (
           <p className="text-body-sm text-on-surface-variant mt-2">
-            Note : cette réponse a été modifiée par l'agent avant envoi (brouillon IA original conservé dans
-            l'historique).
+            Note : cette réponse a été modifiée par l&apos;agent avant envoi (brouillon IA original conservé dans
+            l&apos;historique).
           </p>
         )}
       </form>

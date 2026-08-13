@@ -1,0 +1,28 @@
+# Dev-oriented compose setup: `docker-compose up` reproduces the same hot-reload
+# workflow documented in README.md (uvicorn --reload + vite dev server), just
+# without needing Python/Node installed locally. Not a production deployment -
+# see ARCHITECTURE.md for what that would additionally need.
+#
+# Requires backend/.env to exist first (copy backend/.env.example -> backend/.env),
+# same as the native dev workflow.
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_TARGET: http://backend:8000
+    depends_on:
+      - backend

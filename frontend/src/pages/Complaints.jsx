@@ -58,7 +58,7 @@ export default function Complaints() {
         <div>
           <h1 className="text-headline-lg text-on-surface">Triage des réclamations</h1>
           <p className="text-body-sm text-on-surface-variant mt-1">
-            Gérez et répondez aux requêtes client avec l'assistance de l'IA.
+            Gérez et répondez aux requêtes client avec l&apos;assistance de l&apos;IA.
           </p>
         </div>
         <button
@@ -177,7 +177,20 @@ export default function Complaints() {
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-body-sm text-on-surface-variant">
-                  {c.category ? CATEGORY_LABEL[c.category] || c.category : "—"}
+                  {c.categories && c.categories.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {c.categories.map((cat) => (
+                        <span
+                          key={cat}
+                          className="px-2 py-0.5 rounded-full text-[11px] bg-surface-container-highest text-on-surface-variant border border-outline-variant"
+                        >
+                          {CATEGORY_LABEL[cat] || cat}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    "—"
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   {c.urgency ? (

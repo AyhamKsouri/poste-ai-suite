@@ -84,7 +84,7 @@ class Complaint(Base):
     customer_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     customer_contact: Mapped[str | None] = mapped_column(String(255), nullable=True)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
-    category: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    categories: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     urgency: Mapped[str | None] = mapped_column(String(20), nullable=True)
     # QA audit finding M8: classification previously had no confidence signal at
     # all, so gibberish/empty complaints were auto-triaged with false certainty.
