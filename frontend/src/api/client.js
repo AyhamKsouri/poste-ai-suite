@@ -56,7 +56,9 @@ async function request(path, { method = "GET", body, isForm = false } = {}) {
     } catch {
       // ignore
     }
-    throw new Error(detail);
+    const err = new Error(detail);
+    err.status = res.status;
+    throw err;
   }
 
   if (res.status === 204) return null;

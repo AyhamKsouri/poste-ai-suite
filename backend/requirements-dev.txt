@@ -1,0 +1,8 @@
+# Test/CI-only tooling - not needed to run the app itself, only to develop
+# and test it. Split from requirements.txt so the runtime image doesn't carry
+# these. Versions pinned to what the QA audit's test suite (94 tests, 97%
+# coverage) was actually built and verified against.
+pytest==9.1.1
+pytest-cov==7.1.0
+httpx==0.28.1
+pip-audit==2.10.1

@@ -103,7 +103,7 @@ class ComplaintOut(BaseModel):
     customer_name: str | None
     customer_contact: str | None
     raw_text: str
-    category: str | None
+    categories: list[str]
     urgency: str | None
     confidence: float | None
     ai_summary: str | None

@@ -6,3 +6,5 @@ __pycache__/
 backend/data/
 dist/
 *.log
+.coverage
+.pytest_cache/

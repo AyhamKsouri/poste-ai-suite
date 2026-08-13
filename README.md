@@ -19,7 +19,7 @@ Two AI modules on one platform, built for La Poste Tunisienne:
   <img src="docs/screenshots/dashboard.jpg" width="32%" alt="Dashboard" />
 </p>
 
-A full write-up with more detail (architecture, AI design decisions, screenshots) lives in [`docs/rapport-avancement.html`](docs/rapport-avancement.html).
+A full write-up with more detail (architecture, AI design decisions, screenshots) lives in [`docs/rapport-avancement.html`](docs/rapport-avancement.html). For a technical orientation (request flow, mock-fallback contract, migrations, Docker), see [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## How it's built
 
@@ -39,12 +39,14 @@ The AI service is the single point every generated answer flows through: it alwa
 
 ## AI design highlights
 
-- **Structured outputs** — complaint classification uses Groq's strict JSON-schema output (`response_format: {type: "json_schema", strict: true}`, on `openai/gpt-oss-120b`), so category/urgency/summary/draft come back as guaranteed-valid JSON, no fragile parsing.
+- **Structured outputs** — complaint classification uses Groq's strict JSON-schema output (`response_format: {type: "json_schema", strict: true}`, on `openai/gpt-oss-120b`), so categories/urgency/summary/draft come back as guaranteed-valid JSON, no fragile parsing.
+- **Multi-label classification** — a complaint can have more than one applicable category (e.g. a package that's both late *and* damaged); the model returns every category that genuinely applies instead of being forced to pick just one.
 - **Conversation memory** — the frontend sends the full conversation with every question, so follow-ups and conversational replies ("merci" after an answer) are understood in context instead of evaluated in isolation.
-- **Anti-hallucination guard** — RAG retrieval has a minimum relevance threshold; below it, the assistant says it doesn't know instead of guessing.
+- **Anti-hallucination guard** — RAG retrieval has a minimum relevance threshold and de-duplicates near-identical chunks; below the threshold, the assistant says it doesn't know instead of guessing.
 - **Prompt-injection safety** — every system prompt explicitly tells the model to treat complaint text and retrieved document chunks as data to analyze, never as instructions to follow.
+- **Tuned for consistency** — low temperature on both Groq calls, an explicit instruction never to mix languages within one response, and one automatic retry before falling back to the mock on a transient failure.
 - **Never breaks** — no API key, a failed call, or a model refusal all fall back to deterministic mock responses automatically. The app is always demoable, online or offline.
-- **Human-in-the-loop** — AI drafts are never sent automatically; `draft_reply` (AI) and `final_reply` (what the agent actually sent) are stored separately for full traceability.
+- **Human-in-the-loop** — AI drafts are never sent automatically; `draft_reply` (AI) and `final_reply` (what the agent actually sent) are stored separately for full traceability. Once a complaint is replied to it's locked (`409` on a second attempt), so two agents sharing the same queue can't overwrite each other.
 
 ## Deviations from the original spec
 
@@ -52,9 +54,10 @@ Made for a fast local setup with no extra installs:
 
 | Spec said | This uses | Why |
 |---|---|---|
-| PostgreSQL + Docker Compose | SQLite, no Docker | Zero install; same SQLAlchemy models, swap the connection string later if you want Postgres |
+| PostgreSQL | SQLite | Zero install; same SQLAlchemy models, swap the connection string later if you want Postgres |
 | ChromaDB (embedding vector store) | scikit-learn TF-IDF + cosine similarity | ChromaDB's `hnswlib` dependency needs a C++ compiler not installed on this machine; TF-IDF needs no compiler and works well for procedure-document retrieval |
-| Alembic migrations | `Base.metadata.create_all()` on startup | No migration history needed for a fresh SQLite file |
+
+Docker Compose and Alembic migrations, both originally listed as deviations, have since been added — see [`ARCHITECTURE.md`](ARCHITECTURE.md) for how the dev-oriented `docker-compose.yml` and the migration workflow actually work.
 
 Everything else (auth, schema, endpoints, prompt-injection-safe AI prompts) matches the spec.
 
@@ -91,12 +94,19 @@ npm run dev
 
 Frontend runs at http://localhost:5173 and proxies `/api/*` to the backend.
 
+### With Docker instead
+
+`docker-compose up` from the repo root (after copying `backend/.env.example`
+to `backend/.env`) starts both services with hot reload — no local
+Python/Node install needed. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for
+details.
+
 ## Demo flow
 
 1. Log in as `admin@poste.tn` / `admin123`.
 2. **Documents** (admin) — upload a procedure document (PDF/DOCX/TXT).
 3. **Assistant** — ask a question about that document, see the cited answer, rate it.
-4. **Réclamations** — submit a sample complaint, watch it get triaged instantly, review/edit the draft reply, send it.
+4. **Réclamations** — submit a complaint that mixes two issues (e.g. a late package that also arrived damaged) and watch it get tagged with both categories; review/edit the draft reply, send it. Try opening the same complaint in a second tab after replying — it's locked, so a colleague can't act on it too.
 5. **Dashboard** (admin) — see live stats from both modules.
 
 ## Tech stack
@@ -110,6 +120,9 @@ Frontend runs at http://localhost:5173 and proxies `/api/*` to the backend.
 | Text extraction | pypdf · python-docx |
 | AI | Groq API (`openai/gpt-oss-120b`) via the official `groq` Python SDK |
 | Frontend | React 18 · Vite · React Router · Tailwind CSS |
+| Migrations | Alembic |
+| Dev environment | Docker Compose (backend + frontend, hot reload) |
+| CI | GitHub Actions (backend tests + coverage + `pip-audit`, frontend lint + build) |
 | Versioning | Git |
 
 ## Project structure
@@ -117,7 +130,7 @@ Frontend runs at http://localhost:5173 and proxies `/api/*` to the backend.
 ```
 backend/
   app/
-    main.py           FastAPI app, CORS, startup seeding
+    main.py           FastAPI app, CORS, startup seeding, Alembic stamping
     config.py          env-based settings
     db.py / models.py  SQLAlchemy engine + schema
     auth.py             JWT auth, password hashing
@@ -127,30 +140,49 @@ backend/
       rag.py             /rag/documents, /rag/ask, /rag/stats, ...
       complaints.py       /complaints, /complaints/stats, ...
     services/
-      ai_client.py       Groq API calls + mock fallback
+      ai_client.py       Groq API calls + prompts + mock fallback
       documents.py        PDF/DOCX text extraction + chunking
       vectorstore.py      TF-IDF retrieval index
+  migrations/          Alembic migration history
+  Dockerfile
+  requirements.txt       runtime deps
+  requirements-dev.txt   test/CI-only deps
 frontend/
   src/
     api/client.js        fetch wrapper with JWT handling
     AuthContext.jsx        auth state
+    constants.js            shared label/style maps for complaint fields
     pages/                Login, Assistant, Complaints, ComplaintDetail, Dashboard, AdminDocuments
+  Dockerfile
+tests/                 backend pytest suite (99 tests, runs from repo root)
+docs/audit/            full QA/security audit writeup + evidence
+.github/workflows/     CI (GitHub Actions)
+docker-compose.yml
+ARCHITECTURE.md        technical orientation doc
 ```
+
+## How the project got here
+
+1. **MVP build** (late July) — both AI modules working end-to-end: auth, database, API, and a functional (Tailwind-default) UI.
+2. **Interface redesign** (early August) — a Google Stitch mockup, based on La Poste Tunisienne's own visual identity, integrated page by page into the existing React code without touching the business logic.
+3. **QA/security audit** (12–13 Aug) — a full 6-phase audit (inventory, build/boot, static analysis, backend functional tests, AI-specific evaluation, frontend testing): 94 backend tests added (96% coverage), a live 20-question RAG evaluation against the real Groq key, and `pip-audit` findings brought from 58 to 0. Full writeup in `docs/audit/REPORT.md`.
+4. **Fixes** (13 Aug) — every HIGH/MEDIUM finding from the audit resolved (a crash bug in `/rag/ask`, a broken mobile layout, a missing request timeout, dependency vulnerabilities, and more), verified against the same test suite.
+5. **Follow-up hardening** (13 Aug) — the audit's remaining findings, which needed a product decision rather than a code fix, closed out: complaint locking, multi-label classification, Docker + CI + `ARCHITECTURE.md` for team handoff, and tuned AI prompts (temperature, retry, language consistency).
 
 ## Notes for your defense / report
 
 - **Prompt-injection safety**: both AI calls treat user-supplied text (complaint text, retrieved document chunks) as data, never as instructions — see the system prompts in `services/ai_client.py`.
-- **"I don't know" handling**: the RAG retrieval has a similarity floor (`MIN_RELEVANCE` in `vectorstore.py`) — if nothing relevant is found, the assistant says so instead of guessing.
+- **"I don't know" handling**: the RAG retrieval has a similarity floor (`MIN_RELEVANCE` in `vectorstore.py`) and de-duplicates near-identical chunks — if nothing relevant is found, the assistant says so instead of guessing.
 - **Audit trail**: every login, document upload/delete, question asked, and complaint action is recorded in the `audit_log` table.
 - **Draft vs. final reply**: complaints store both `draft_reply` (AI-generated) and `final_reply` (what the agent actually sent) separately, so you can show "AI suggested X, agent sent Y" if asked.
+- **Test suite**: 99 backend tests (`pytest tests/`, ~96% coverage) plus a live RAG evaluation script (`docs/audit/rag_eval_live_answers.py`) that scored 20/20 correct answers with 0% hallucination against the real Groq API — see `docs/audit/REPORT.md` for full methodology and results.
 
 ## Roadmap
 
-1. **Enable live AI** — set `GROQ_API_KEY` in `backend/.env` and restart; no code changes needed.
-2. **Automated tests** — cover auth, classification, and retrieval endpoints.
-3. **Production database** — optional migration to PostgreSQL + Docker Compose for multi-user deployment.
-4. **Semantic retrieval** — optional swap of TF-IDF for embedding-based search if match quality needs to improve.
-5. **Deployment** — host backend and frontend for access outside the local machine.
+1. **Production database** — optional migration to PostgreSQL for a real multi-user deployment (SQLite remains fine for the current scale).
+2. **Production-hardened Docker** — the current `docker-compose.yml` is dev-oriented (hot reload); a production build (nginx + static frontend, process manager) is a separate future step.
+3. **Semantic retrieval** — optional swap of TF-IDF for embedding-based search if match quality needs to improve.
+4. **Deployment** — host backend and frontend for access outside the local machine.
 
 ## Authors
 

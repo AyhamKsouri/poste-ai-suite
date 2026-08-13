@@ -169,7 +169,7 @@ export default function Assistant() {
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
               <Icon name="smart_toy" style={{ fontSize: 18 }} />
             </div>
-            <p className="text-body-sm text-on-surface-variant italic">L'assistant réfléchit...</p>
+            <p className="text-body-sm text-on-surface-variant italic">L&apos;assistant réfléchit...</p>
           </div>
         )}
       </div>
@@ -191,7 +191,7 @@ export default function Assistant() {
           </button>
         </div>
         <p className="text-center text-[11px] text-on-surface-variant mt-2 tracking-wide">
-          L'Assistant Poste AI peut générer des informations inexactes. Vérifiez toujours les données critiques.
+          L&apos;Assistant Poste AI peut générer des informations inexactes. Vérifiez toujours les données critiques.
         </p>
       </form>
     </div>

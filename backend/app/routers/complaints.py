@@ -32,7 +32,7 @@ def submit_complaint(payload: ComplaintCreate, db: Session = Depends(get_db), us
     db.commit()
 
     ai_result = classify_complaint(payload.raw_text)
-    complaint.category = ai_result["category"]
+    complaint.categories = ai_result["categories"]
     complaint.urgency = ai_result["urgency"]
     complaint.confidence = ai_result.get("confidence")
     complaint.ai_summary = ai_result["summary"]
@@ -46,7 +46,7 @@ def submit_complaint(payload: ComplaintCreate, db: Session = Depends(get_db), us
             target_table="complaints",
             target_id=complaint.id,
             log_metadata={
-                "category": complaint.category,
+                "categories": complaint.categories,
                 "urgency": complaint.urgency,
                 "confidence": complaint.confidence,
             },
@@ -68,20 +68,29 @@ def list_complaints(
     q = db.query(Complaint)
     if status:
         q = q.filter(Complaint.status == status)
-    if category:
-        q = q.filter(Complaint.category == category)
     if urgency:
         q = q.filter(Complaint.urgency == urgency)
-    return q.order_by(Complaint.created_at.desc()).all()
+    results = q.order_by(Complaint.created_at.desc()).all()
+    # A JSON "list contains" filter isn't portably expressible in SQL across
+    # backends, and this app's scale doesn't need it to be - filter the (small)
+    # result set in Python instead.
+    if category:
+        results = [c for c in results if category in (c.categories or [])]
+    return results
 
 
 @router.get("/stats", response_model=ComplaintStats)
 def complaint_stats(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     total = db.query(func.count(Complaint.id)).scalar() or 0
 
-    by_category_rows = (
-        db.query(Complaint.category, func.count(Complaint.id)).group_by(Complaint.category).all()
-    )
+    # A complaint with multiple categories counts in every one of its buckets -
+    # accurate multi-label stats aren't expressible as a single SQL GROUP BY,
+    # so tally in Python instead (small dataset at this app's scale).
+    by_category: dict[str, int] = {}
+    for (categories,) in db.query(Complaint.categories).all():
+        for cat in categories or ["unknown"]:
+            by_category[cat] = by_category.get(cat, 0) + 1
+
     by_urgency_rows = (
         db.query(Complaint.urgency, func.count(Complaint.id)).group_by(Complaint.urgency).all()
     )
@@ -97,7 +106,7 @@ def complaint_stats(db: Session = Depends(get_db), user: User = Depends(get_curr
 
     return ComplaintStats(
         total=total,
-        by_category={(k or "unknown"): v for k, v in by_category_rows},
+        by_category=by_category,
         by_urgency={(k or "unknown"): v for k, v in by_urgency_rows},
         avg_resolution_hours=avg_resolution_hours,
     )
@@ -121,6 +130,10 @@ def send_reply(
     complaint = db.get(Complaint, complaint_id)
     if not complaint:
         raise HTTPException(status_code=404, detail="Complaint not found")
+    if complaint.status == "replied":
+        raise HTTPException(
+            status_code=409, detail="Cette réclamation a déjà été traitée par un collègue."
+        )
 
     complaint.final_reply = payload.final_reply
     complaint.status = "replied"
@@ -146,6 +159,10 @@ def update_status(
         raise HTTPException(status_code=404, detail="Complaint not found")
     if payload.status not in ("new", "reviewed", "replied"):
         raise HTTPException(status_code=400, detail="Invalid status")
+    if complaint.status == "replied":
+        raise HTTPException(
+            status_code=409, detail="Cette réclamation a déjà été traitée par un collègue."
+        )
 
     complaint.status = payload.status
     db.commit()
