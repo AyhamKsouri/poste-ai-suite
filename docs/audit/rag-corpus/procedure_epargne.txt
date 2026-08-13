@@ -1,0 +1,18 @@
+Procédure : Ouverture d'un compte épargne (Livret Poste)
+
+Le Livret Poste est un compte d'épargne rémunéré proposé par La Poste Tunisienne, distinct du
+compte courant postal (CCP).
+
+Pour ouvrir un Livret Poste, le client doit se présenter dans un bureau de poste avec :
+- Carte d'identité nationale (CIN) en cours de validité
+- Un justificatif de domicile récent
+- Un dépôt initial minimum de 10 dinars tunisiens
+
+Contrairement au CCP, le Livret Poste ne permet pas d'émettre de chèques ni d'effectuer de
+virements directs à des tiers ; il sert exclusivement à l'épargne, avec un taux d'intérêt annuel
+fixé par La Poste Tunisienne et révisable selon la réglementation en vigueur.
+
+Les dépôts et retraits peuvent être effectués librement dans n'importe quel bureau de poste, ou
+en ligne via le service CCPNet pour les titulaires qui ont activé cet accès. Aucun montant
+maximum de dépôt n'est imposé, mais des plafonds réglementaires peuvent s'appliquer selon le
+type de livret souscrit.

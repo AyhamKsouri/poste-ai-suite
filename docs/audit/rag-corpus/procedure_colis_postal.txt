@@ -1,0 +1,21 @@
+Procédure : Envoi et suivi d'un colis postal
+
+Pour envoyer un colis, le client se présente à un bureau de poste avec le colis emballé et,
+si le contenu a une valeur commerciale, une facture ou un justificatif de valeur.
+
+Conditions générales d'acceptation :
+- Poids maximum autorisé : 30 kilogrammes par colis
+- Le colis doit être correctement emballé et étiqueté avec l'adresse complète du destinataire
+- Les objets interdits (produits dangereux, périssables sans emballage adapté, espèces) sont refusés
+
+Le tarif d'envoi dépend du poids et de la destination (national ou international) ; il est
+détaillé dans la grille tarifaire des services postaux. L'agent délivre un numéro de suivi qui
+permet de suivre l'acheminement du colis en ligne via le site de La Poste Tunisienne ou l'application
+MyPoste.
+
+Délais indicatifs d'acheminement :
+- National : 2 à 4 jours ouvrables
+- International : 10 à 20 jours ouvrables selon le pays de destination
+
+En cas de colis perdu ou endommagé, le destinataire ou l'expéditeur doit suivre la procédure de
+réclamation client dans les délais prévus pour ouvrir droit à une éventuelle indemnisation.

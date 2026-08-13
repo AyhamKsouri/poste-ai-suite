@@ -1,0 +1,23 @@
+Procédure : Réclamation client
+
+Un client peut déposer une réclamation auprès de La Poste Tunisienne pour tout incident lié à
+un colis, un mandat, ou une opération sur compte CCP ou Livret Poste.
+
+Canaux de dépôt d'une réclamation :
+- Au guichet de n'importe quel bureau de poste
+- Par téléphone via le centre d'appel dédié
+- En ligne via l'application MyPoste, pour les clients disposant d'un accès CCPNet
+
+Le client doit fournir le numéro de suivi (colis) ou le numéro de référence (mandat, opération
+CCP) ainsi qu'une description des faits. Un accusé de réception est délivré avec un numéro de
+dossier permettant de suivre l'avancement du traitement.
+
+Délais indicatifs de traitement :
+- Colis perdu ou endommagé : 15 jours ouvrables pour une réponse, avec ouverture d'une enquête
+  auprès du centre de tri concerné
+- Mandat non reçu par le bénéficiaire : 7 jours ouvrables avant qu'une vérification approfondie
+  ne soit lancée
+- Litige sur une opération de compte CCP ou Livret Poste : 10 jours ouvrables
+
+Si le client n'est pas satisfait de la réponse apportée, il peut demander une escalade auprès du
+responsable du bureau de poste ou de la direction régionale concernée.

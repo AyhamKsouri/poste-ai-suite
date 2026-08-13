@@ -34,6 +34,7 @@ def submit_complaint(payload: ComplaintCreate, db: Session = Depends(get_db), us
     ai_result = classify_complaint(payload.raw_text)
     complaint.category = ai_result["category"]
     complaint.urgency = ai_result["urgency"]
+    complaint.confidence = ai_result.get("confidence")
     complaint.ai_summary = ai_result["summary"]
     complaint.draft_reply = ai_result["draft_reply"]
     complaint.status = "reviewed"
@@ -44,7 +45,11 @@ def submit_complaint(payload: ComplaintCreate, db: Session = Depends(get_db), us
             action="complaint.triaged",
             target_table="complaints",
             target_id=complaint.id,
-            log_metadata={"category": complaint.category, "urgency": complaint.urgency},
+            log_metadata={
+                "category": complaint.category,
+                "urgency": complaint.urgency,
+                "confidence": complaint.confidence,
+            },
         )
     )
     db.commit()

@@ -2,35 +2,33 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import Icon from "../components/Icon";
-
-const STATUS_LABEL = { new: "Nouveau", reviewed: "Analysé", replied: "Répondu" };
-const STATUS_STYLE = {
-  new: "text-primary bg-primary-fixed",
-  reviewed: "text-outline bg-surface-container-highest",
-  replied: "text-on-secondary-container bg-secondary-fixed",
-};
-const URGENCY_LABEL = { high: "Élevée", medium: "Moyenne", low: "Faible" };
-const URGENCY_STYLE = {
-  high: "bg-error-container text-on-error-container border-error/20",
-  medium: "bg-secondary-fixed text-on-secondary-fixed-variant border-secondary/20",
-  low: "bg-surface-container-high text-on-surface border-outline-variant",
-};
-const URGENCY_DOT = { high: "bg-error", medium: "bg-secondary", low: "bg-primary-container" };
+import { CATEGORY_LABEL, STATUS_LABEL, STATUS_STYLE, URGENCY_DOT, URGENCY_LABEL, URGENCY_STYLE } from "../constants";
 
 export default function Complaints() {
   const [complaints, setComplaints] = useState([]);
   const [filters, setFilters] = useState({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ customer_name: "", customer_contact: "", raw_text: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
+  // QA audit finding M3: load() previously had no error handling at all - a
+  // failed request left `loading` stuck true forever, showing "Chargement..."
+  // indefinitely with no way to recover short of a manual reload.
   async function load() {
     setLoading(true);
-    const data = await api.listComplaints(filters);
-    setComplaints(data);
-    setLoading(false);
+    setLoadError(null);
+    try {
+      const data = await api.listComplaints(filters);
+      setComplaints(data);
+    } catch (err) {
+      setLoadError(err.message || "Échec du chargement des réclamations.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -41,11 +39,14 @@ export default function Complaints() {
   async function handleSubmit(e) {
     e.preventDefault();
     setSubmitting(true);
+    setSubmitError(null);
     try {
       await api.submitComplaint(form);
       setForm({ customer_name: "", customer_contact: "", raw_text: "" });
       setShowForm(false);
       await load();
+    } catch (err) {
+      setSubmitError(err.message || "Échec de l'envoi de la réclamation.");
     } finally {
       setSubmitting(false);
     }
@@ -96,6 +97,11 @@ export default function Complaints() {
             onChange={(e) => setForm({ ...form, raw_text: e.target.value })}
             required
           />
+          {submitError && (
+            <p className="text-body-sm text-error bg-error-container/40 border border-error/30 rounded-lg px-3 py-2">
+              {submitError}
+            </p>
+          )}
           <button
             disabled={submitting}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-label-md hover:bg-primary-container transition-colors disabled:opacity-50"
@@ -141,7 +147,22 @@ export default function Complaints() {
                 </td>
               </tr>
             )}
-            {!loading && complaints.length === 0 && (
+            {!loading && loadError && (
+              <tr>
+                <td className="px-4 py-6 text-body-sm" colSpan={5}>
+                  <div className="flex items-center justify-between gap-3 text-error">
+                    <span>{loadError}</span>
+                    <button
+                      onClick={load}
+                      className="px-3 py-1.5 rounded-md border border-error/30 hover:bg-error-container/30 transition-colors shrink-0"
+                    >
+                      Réessayer
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )}
+            {!loading && !loadError && complaints.length === 0 && (
               <tr>
                 <td className="px-4 py-6 text-on-surface-variant text-body-sm" colSpan={5}>
                   Aucune réclamation.
@@ -155,7 +176,9 @@ export default function Complaints() {
                     {c.customer_name || "(anonyme)"}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-body-sm text-on-surface-variant">{c.category || "—"}</td>
+                <td className="px-4 py-3 text-body-sm text-on-surface-variant">
+                  {c.category ? CATEGORY_LABEL[c.category] || c.category : "—"}
+                </td>
                 <td className="px-4 py-3">
                   {c.urgency ? (
                     <span

@@ -1,0 +1,17 @@
+Procédure : Demande et activation de la carte e-Dinar Post
+
+La carte e-Dinar Post est une carte de paiement et de retrait électronique adossée à un compte
+CCP ou à un Livret Poste actif.
+
+Pour en faire la demande, le titulaire du compte se présente en bureau de poste avec :
+- Sa carte d'identité nationale (CIN)
+- Son numéro de compte CCP ou Livret Poste, qui doit être actif depuis au moins 30 jours
+
+Le délai de fabrication de la carte est d'environ 10 jours ouvrables ; le client est prévenu par
+SMS ou peut vérifier la disponibilité de sa carte via l'application MyPoste. L'activation se fait
+au guichet, en présence du titulaire, avec définition d'un code confidentiel à 4 chiffres.
+
+Le plafond de retrait quotidien standard est fixé à 1000 dinars tunisiens, et le plafond de
+paiement chez les commerçants affiliés est défini séparément selon le type de carte souscrit.
+En cas de perte ou de vol, le titulaire doit immédiatement faire opposition en appelant le centre
+d'appel de La Poste Tunisienne ou en se rendant dans n'importe quel bureau de poste.
