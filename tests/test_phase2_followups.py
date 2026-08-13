@@ -1,20 +1,18 @@
-"""Directly resolves the two 'plausible, not yet confirmed' risks flagged by
-mypy in docs/audit/phase-2-static-analysis.md, using white-box mocking/raw
-requests rather than needing a live Groq key (that's Phase 4's job)."""
+"""Regression tests for finding H1 (docs/audit/REPORT.md): a Groq response
+with message.content=None under a non-content_filter finish_reason used to
+bypass the mock fallback entirely and crash AskResponse's Pydantic
+validation (~HTTP 500 in production). Fixed in ai_client.py by treating a
+None content the same as a content_filter hit. These tests now confirm the
+fix holds, using white-box mocking rather than needing a live Groq key."""
 from unittest.mock import MagicMock
-
-import pytest
 
 from app.services import ai_client
 
 
-def test_answer_question_none_content_from_groq_bypasses_mock_fallback():
-    """Reproduces the exact scenario mypy flagged at ai_client.py:196: a Groq
-    response whose message.content is None but finish_reason is NOT
-    'content_filter' (e.g. 'stop' with an empty completion). The code only
-    special-cases content_filter before returning choice.message.content
-    directly - a None here is returned as-is, not caught by the except block,
-    since returning None doesn't raise."""
+def test_answer_question_none_content_falls_back_to_mock():
+    """Regression test for H1: a Groq response with message.content=None and
+    finish_reason='stop' (not content_filter) must now fall back to the mock
+    answer instead of returning None."""
     fake_choice = MagicMock()
     fake_choice.finish_reason = "stop"
     fake_choice.message.content = None
@@ -31,26 +29,16 @@ def test_answer_question_none_content_from_groq_bypasses_mock_fallback():
     finally:
         ai_client._client = original_client
 
-    # CONFIRMED: the function returns None instead of falling back to the mock,
-    # exactly as the mypy return-type mismatch predicted.
-    assert result is None, (
-        "CONFIRMED BUG: answer_question() returns None (not a str, not the mock "
-        "fallback) when Groq returns content=None under a non-content_filter "
-        "finish_reason. Declared return type is `-> str`."
+    assert isinstance(result, str) and result, (
+        "H1 regression: answer_question() must fall back to the mock string "
+        "when Groq returns content=None, not return None itself."
     )
 
 
-def test_ask_endpoint_500s_when_groq_returns_none_content(client, agent_headers):
-    """Proves the end-to-end consequence: does POST /rag/ask actually break when
-    answer_question() returns None, given AskResponse.answer is a non-optional
-    str in schemas.py? Result: it raises pydantic_core.ValidationError from
-    inside rag.py:137 (AskResponse(answer=None, ...)) - TestClient re-raises
-    server-side exceptions by default (for debuggability) rather than converting
-    them to an HTTP response, but the same exception reaching a real uvicorn
-    server (no such re-raise) surfaces to the client as an HTTP 500 - so this
-    IS the production-equivalent confirmation of a real 500, not a milder outcome."""
-    from pydantic_core import ValidationError
-
+def test_ask_endpoint_succeeds_when_groq_returns_none_content(client, agent_headers):
+    """Regression test for H1's end-to-end consequence: POST /rag/ask must
+    return a normal 200 with a real string answer, not raise a
+    pydantic ValidationError, when Groq returns content=None."""
     fake_choice = MagicMock()
     fake_choice.finish_reason = "stop"
     fake_choice.message.content = None
@@ -62,16 +50,13 @@ def test_ask_endpoint_500s_when_groq_returns_none_content(client, agent_headers)
     original_client = ai_client._client
     try:
         ai_client._client = fake_client
-        with pytest.raises(ValidationError, match="answer"):
-            client.post("/rag/ask", json={"question": "trigger the none-content bug"}, headers=agent_headers)
+        resp = client.post("/rag/ask", json={"question": "trigger the none-content case"}, headers=agent_headers)
     finally:
         ai_client._client = original_client
-    print(
-        "\n[CONFIRMED BUG] POST /rag/ask raises an unhandled pydantic ValidationError "
-        "(AskResponse.answer=None) when Groq returns content=None under a non-"
-        "content_filter finish_reason - equivalent to an HTTP 500 in production, "
-        "violating the app's own 'never 500s on AI hiccup' design goal."
-    )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert isinstance(body["answer"], str) and body["answer"]
 
 
 def test_upload_with_truly_missing_filename_attribute(client, admin_headers):

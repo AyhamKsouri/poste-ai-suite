@@ -70,6 +70,32 @@ def test_upload_no_file_field(client, admin_headers):
     assert resp.status_code == 422
 
 
+def test_upload_rejects_disallowed_extension(client, admin_headers):
+    """Regression test for finding M5: no extension allowlist used to exist
+    at all, feeding an unbounded pypdf/python-docx call with arbitrary files."""
+    resp = client.post(
+        "/rag/documents",
+        files={"file": ("malware.exe", io.BytesIO(b"MZ\x90\x00fake exe content"), "application/octet-stream")},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 400
+    assert "Unsupported file type" in resp.json()["detail"]
+
+
+def test_upload_rejects_oversized_file(client, admin_headers):
+    """Regression test for finding M5: no size cap used to exist at all."""
+    from app.routers.rag import MAX_UPLOAD_SIZE_BYTES
+
+    oversized = b"a" * (MAX_UPLOAD_SIZE_BYTES + 1024)
+    resp = client.post(
+        "/rag/documents",
+        files={"file": ("huge.txt", io.BytesIO(oversized), "text/plain")},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 400
+    assert "upload limit" in resp.json()["detail"]
+
+
 def test_list_documents_requires_auth(client):
     resp = client.get("/rag/documents")
     assert resp.status_code == 401

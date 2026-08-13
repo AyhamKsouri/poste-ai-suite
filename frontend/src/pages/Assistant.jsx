@@ -1,6 +1,22 @@
 import React, { useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { api } from "../api/client";
 import Icon from "../components/Icon";
+
+const MARKDOWN_COMPONENTS = {
+  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+  ul: ({ children }) => <ul className="list-disc pl-5 mb-2 space-y-1">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal pl-5 mb-2 space-y-1">{children}</ol>,
+  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+  a: ({ children, href }) => (
+    <a href={href} target="_blank" rel="noreferrer" className="text-primary underline">
+      {children}
+    </a>
+  ),
+  code: ({ children }) => (
+    <code className="bg-surface-container-high px-1 py-0.5 rounded text-[13px]">{children}</code>
+  ),
+};
 
 export default function Assistant() {
   const [messages, setMessages] = useState([]);
@@ -80,7 +96,9 @@ export default function Assistant() {
                 <Icon name="smart_toy" style={{ fontSize: 18 }} />
               </div>
               <div className="bg-surface-container-lowest border border-outline-variant/30 shadow-card p-5 rounded-2xl rounded-tl-sm w-full space-y-4">
-                <p className="text-body-md text-on-surface whitespace-pre-wrap leading-relaxed">{m.text}</p>
+                <div className="text-body-md text-on-surface leading-relaxed">
+                  <ReactMarkdown components={MARKDOWN_COMPONENTS}>{m.text}</ReactMarkdown>
+                </div>
 
                 {m.sources?.length > 0 && (
                   <details className="border border-outline-variant/50 rounded-xl overflow-hidden bg-surface-bright group/sources">

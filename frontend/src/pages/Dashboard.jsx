@@ -11,6 +11,7 @@ import {
 } from "chart.js";
 import { api } from "../api/client";
 import Icon from "../components/Icon";
+import { CATEGORY_LABEL, URGENCY_LABEL } from "../constants";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
@@ -52,10 +53,14 @@ function Kpi({ icon, label, value }) {
 export default function Dashboard() {
   const [ragStats, setRagStats] = useState(null);
   const [complaintStats, setComplaintStats] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    api.ragStats().then(setRagStats);
-    api.complaintStats().then(setComplaintStats);
+    // QA audit finding M3: neither call here had a .catch() - a failed
+    // request left both stat panels stuck on their "…" loading placeholders
+    // forever with no indication anything had gone wrong.
+    api.ragStats().then(setRagStats).catch((err) => setError(err.message));
+    api.complaintStats().then(setComplaintStats).catch((err) => setError(err.message));
   }, []);
 
   const satisfactionPct =
@@ -63,9 +68,11 @@ export default function Dashboard() {
       ? Math.round((ragStats.helpful_count / (ragStats.helpful_count + ragStats.not_helpful_count)) * 100)
       : null;
 
-  const categoryLabels = complaintStats ? Object.keys(complaintStats.by_category) : [];
+  const categoryKeys = complaintStats ? Object.keys(complaintStats.by_category) : [];
+  const categoryLabels = categoryKeys.map((k) => CATEGORY_LABEL[k] || k);
   const categoryData = complaintStats ? Object.values(complaintStats.by_category) : [];
-  const urgencyLabels = complaintStats ? Object.keys(complaintStats.by_urgency) : [];
+  const urgencyKeys = complaintStats ? Object.keys(complaintStats.by_urgency) : [];
+  const urgencyLabels = urgencyKeys.map((k) => URGENCY_LABEL[k] || k);
   const urgencyData = complaintStats ? Object.values(complaintStats.by_urgency) : [];
 
   return (
@@ -76,6 +83,13 @@ export default function Dashboard() {
           Analyse des performances de l'assistant IA et du traitement des réclamations.
         </p>
       </header>
+
+      {error && (
+        <div className="flex items-center gap-2 text-body-sm text-error bg-error-container/40 border border-error/30 rounded-lg px-4 py-3">
+          <Icon name="error" style={{ fontSize: 16 }} />
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
         <Kpi icon="contact_support" label="Questions posées" value={ragStats?.total_questions ?? "…"} />
@@ -132,7 +146,7 @@ export default function Dashboard() {
                   datasets: [
                     {
                       data: urgencyData,
-                      backgroundColor: urgencyLabels.map((l) => URGENCY_COLOR[l] || TEXT),
+                      backgroundColor: urgencyKeys.map((k) => URGENCY_COLOR[k] || TEXT),
                       borderWidth: 0,
                     },
                   ],

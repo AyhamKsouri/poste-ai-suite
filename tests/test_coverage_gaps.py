@@ -107,6 +107,19 @@ def test_list_questions_with_feedback_filter(client, admin_headers, agent_header
     assert any(q["id"] == qid for q in resp.json())
 
 
+def test_submit_complaint_money_order_category_mock_path(client, agent_headers):
+    """Exercises the new 'money_order_issue' branch of _mock_classify
+    (ai_client.py:102-103), added for finding M7 (the taxonomy previously had
+    no category for mandat/money-order complaints)."""
+    resp = client.post(
+        "/complaints",
+        json={"raw_text": "Mon mandat envoye il y a 10 jours n'est toujours pas arrive."},
+        headers=agent_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["category"] == "money_order_issue"
+
+
 def test_submit_complaint_billing_category_mock_path(client, agent_headers):
     """Exercises the 'billing' branch of _mock_classify (ai_client.py:89-90),
     unreached by the other complaint tests' wording."""

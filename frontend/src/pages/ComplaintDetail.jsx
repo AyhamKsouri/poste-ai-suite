@@ -2,17 +2,29 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import Icon from "../components/Icon";
+import { CATEGORY_LABEL, STATUS_LABEL, URGENCY_LABEL } from "../constants";
+
+const LOW_CONFIDENCE_THRESHOLD = 0.5;
 
 export default function ComplaintDetail() {
   const { id } = useParams();
   const [complaint, setComplaint] = useState(null);
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+  const [sendError, setSendError] = useState(null);
 
+  // QA audit finding M3: load() previously had no error handling - a failed
+  // request left the page stuck on "Chargement..." forever with no way out.
   async function load() {
-    const c = await api.getComplaint(id);
-    setComplaint(c);
-    setReply(c.final_reply || c.draft_reply || "");
+    setLoadError(null);
+    try {
+      const c = await api.getComplaint(id);
+      setComplaint(c);
+      setReply(c.final_reply || c.draft_reply || "");
+    } catch (err) {
+      setLoadError(err.message || "Échec du chargement de la réclamation.");
+    }
   }
 
   useEffect(() => {
@@ -23,17 +35,38 @@ export default function ComplaintDetail() {
   async function handleSend(e) {
     e.preventDefault();
     setBusy(true);
+    setSendError(null);
     try {
       await api.replyComplaint(id, reply);
       await load();
+    } catch (err) {
+      setSendError(err.message || "Échec de l'envoi de la réponse.");
     } finally {
       setBusy(false);
     }
   }
 
+  if (loadError) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center justify-between gap-3 text-error bg-error-container/40 border border-error/30 rounded-lg px-4 py-3">
+          <span>{loadError}</span>
+          <button
+            onClick={load}
+            className="px-3 py-1.5 rounded-md border border-error/30 hover:bg-error-container/30 transition-colors shrink-0"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!complaint) return <p className="text-on-surface-variant">Chargement...</p>;
 
   const isReplied = complaint.status === "replied";
+  const isLowConfidence =
+    typeof complaint.confidence === "number" && complaint.confidence < LOW_CONFIDENCE_THRESHOLD;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -45,18 +78,31 @@ export default function ComplaintDetail() {
         Réclamation de {complaint.customer_name || "(anonyme)"}
       </h1>
 
+      {isLowConfidence && (
+        <div className="flex items-center gap-2 text-body-sm text-on-error-container bg-error-container/50 border border-error/30 rounded-lg px-3 py-2 mb-3">
+          <Icon name="warning" style={{ fontSize: 16 }} />
+          Confiance IA faible sur cette classification — à vérifier manuellement.
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-3">
           <div className="text-label-md text-on-surface-variant uppercase">Catégorie</div>
-          <div className="text-body-md font-medium text-on-surface mt-1">{complaint.category}</div>
+          <div className="text-body-md font-medium text-on-surface mt-1">
+            {complaint.category ? CATEGORY_LABEL[complaint.category] || complaint.category : "—"}
+          </div>
         </div>
         <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-3">
           <div className="text-label-md text-on-surface-variant uppercase">Urgence</div>
-          <div className="text-body-md font-medium text-on-surface mt-1">{complaint.urgency}</div>
+          <div className="text-body-md font-medium text-on-surface mt-1">
+            {complaint.urgency ? URGENCY_LABEL[complaint.urgency] || complaint.urgency : "—"}
+          </div>
         </div>
         <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-3">
           <div className="text-label-md text-on-surface-variant uppercase">Statut</div>
-          <div className="text-body-md font-medium text-on-surface mt-1">{complaint.status}</div>
+          <div className="text-body-md font-medium text-on-surface mt-1">
+            {STATUS_LABEL[complaint.status] || complaint.status}
+          </div>
         </div>
       </div>
 
@@ -88,6 +134,11 @@ export default function ComplaintDetail() {
           onChange={(e) => setReply(e.target.value)}
           disabled={isReplied}
         />
+        {sendError && (
+          <p className="text-body-sm text-error bg-error-container/40 border border-error/30 rounded-lg px-3 py-2 mb-3">
+            {sendError}
+          </p>
+        )}
         {!isReplied && (
           <button
             disabled={busy}

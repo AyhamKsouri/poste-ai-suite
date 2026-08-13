@@ -1,5 +1,17 @@
 const BASE = "/api";
 
+// QA audit finding M2/L6: the app used to treat a pure connection failure
+// (backend unreachable) identically to an actual 401 - silently discarding a
+// still-valid token and/or showing a misleading "Internal Server Error"
+// message. This class lets callers (AuthContext in particular) tell the two
+// apart and react appropriately.
+export class NetworkError extends Error {
+  constructor() {
+    super("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
+    this.name = "NetworkError";
+  }
+}
+
 function getToken() {
   return localStorage.getItem("token");
 }
@@ -15,11 +27,20 @@ async function request(path, { method = "GET", body, isForm = false } = {}) {
   if (token) headers["Authorization"] = `Bearer ${token}`;
   if (!isForm && body !== undefined) headers["Content-Type"] = "application/json";
 
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers,
-    body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
-  });
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method,
+      headers,
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
+    });
+  } catch {
+    // fetch() itself throwing means the request never reached the server at
+    // all (offline, DNS failure, connection refused) - this is NOT the same
+    // as the server responding with an auth failure, and must not be treated
+    // as one by callers like AuthContext.
+    throw new NetworkError();
+  }
 
   if (res.status === 401) {
     setToken(null);
