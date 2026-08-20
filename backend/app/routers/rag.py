@@ -153,9 +153,10 @@ def ask(payload: AskRequest, db: Session = Depends(get_db), user: User = Depends
         response_time_ms=elapsed_ms,
     )
     db.add(question)
-    db.add(AuditLog(user_id=user.id, action="rag.question_asked", target_table="questions", target_id=question.id))
     db.commit()
     db.refresh(question)
+    db.add(AuditLog(user_id=user.id, action="rag.question_asked", target_table="questions", target_id=question.id))
+    db.commit()
 
     return AskResponse(answer=answer, sources=sources, question_id=question.id)
 
