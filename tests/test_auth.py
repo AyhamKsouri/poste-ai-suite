@@ -96,7 +96,7 @@ def test_register_happy_path_as_admin(client, admin_headers):
 
 
 def test_register_duplicate_email(client, admin_headers):
-    payload = {"email": "dupe@poste.tn", "password": "x", "full_name": "Dupe"}
+    payload = {"email": "dupe@poste.tn", "password": "Pass1234", "full_name": "Dupe"}
     first = client.post("/auth/register", json=payload, headers=admin_headers)
     assert first.status_code == 200
     second = client.post("/auth/register", json=payload, headers=admin_headers)
@@ -123,15 +123,40 @@ def test_register_unicode_full_name(client, admin_headers):
     assert resp.json()["full_name"] == "محمد الأمين بن صالح — Amine Bensalah"
 
 
+def test_register_short_password_rejected(client, admin_headers):
+    """Regression test for AUDIT.md finding NEW-4: passwords under 8 characters
+    (including empty) must be rejected by schema validation, not silently accepted."""
+    resp = client.post(
+        "/auth/register",
+        json={"email": "shortpass@poste.tn", "password": "abc123", "full_name": "Short Pass"},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 422
+
+
 def test_register_empty_password(client, admin_headers):
-    """No min-length validation on password in schemas.py - empty string is accepted.
-    This is itself a finding (see phase-2), asserting the observed (weak) behavior."""
     resp = client.post(
         "/auth/register",
         json={"email": "emptypass@poste.tn", "password": "", "full_name": "Empty Pass"},
         headers=admin_headers,
     )
-    assert resp.status_code == 200, "confirms: no server-side minimum password length is enforced"
+    assert resp.status_code == 422
+
+
+def test_register_invalid_role_rejected(client, admin_headers):
+    """Regression test for AUDIT.md finding NEW-4: role must be validated against
+    the UserRole enum instead of accepting an arbitrary string."""
+    resp = client.post(
+        "/auth/register",
+        json={
+            "email": "fakerole@poste.tn",
+            "password": "Pass123!",
+            "full_name": "Fake Role",
+            "role": "superadmin_totally_fake",
+        },
+        headers=admin_headers,
+    )
+    assert resp.status_code == 422
 
 
 # ---- GET /auth/me ----
