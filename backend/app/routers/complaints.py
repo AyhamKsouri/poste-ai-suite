@@ -148,6 +148,9 @@ def update_status(
         raise HTTPException(status_code=400, detail="Invalid status")
 
     complaint.status = payload.status
+    db.add(
+        AuditLog(user_id=user.id, action="complaint.status_updated", target_table="complaints", target_id=complaint.id)
+    )
     db.commit()
     db.refresh(complaint)
     return complaint
