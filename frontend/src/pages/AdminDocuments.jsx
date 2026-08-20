@@ -21,6 +21,8 @@ export default function AdminDocuments() {
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
   const fileRef = useRef();
 
   async function load() {
@@ -34,11 +36,14 @@ export default function AdminDocuments() {
   async function doUpload(file) {
     if (!file) return;
     setUploading(true);
+    setUploadError(null);
     try {
       await api.uploadDocument(file);
       setSelectedFile(null);
       if (fileRef.current) fileRef.current.value = "";
       await load();
+    } catch (err) {
+      setUploadError(err.message || "Échec du téléversement du document.");
     } finally {
       setUploading(false);
     }
@@ -52,8 +57,13 @@ export default function AdminDocuments() {
   }
 
   async function handleDelete(id) {
-    await api.deleteDocument(id);
-    await load();
+    setDeleteError(null);
+    try {
+      await api.deleteDocument(id);
+      await load();
+    } catch (err) {
+      setDeleteError(err.message || "Échec de la suppression du document.");
+    }
   }
 
   return (
@@ -108,6 +118,11 @@ export default function AdminDocuments() {
                 />
               </div>
             </div>
+            {uploadError && (
+              <p className="text-body-sm text-error bg-error-container/40 border border-error/30 rounded-lg px-3 py-2 mt-4">
+                {uploadError}
+              </p>
+            )}
             {selectedFile && (
               <button
                 disabled={uploading}
@@ -126,6 +141,11 @@ export default function AdminDocuments() {
             <div className="flex items-center justify-between mb-4 pb-4 border-b border-outline-variant/50">
               <h3 className="text-headline-sm text-on-surface">Documents ({documents.length})</h3>
             </div>
+            {deleteError && (
+              <p className="text-body-sm text-error bg-error-container/40 border border-error/30 rounded-lg px-3 py-2 mb-4">
+                {deleteError}
+              </p>
+            )}
             <div className="flex flex-col gap-3">
               {documents.length === 0 && (
                 <p className="text-body-sm text-on-surface-variant py-4">

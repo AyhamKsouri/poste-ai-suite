@@ -197,6 +197,29 @@ def test_update_status_invalid_value(client, agent_headers):
     assert resp.status_code == 400
 
 
+def test_update_status_writes_audit_log(client, agent_headers):
+    """Regression test for AUDIT.md finding NEW-2: PATCH /complaints/{id}/status must
+    record an AuditLog entry, like every other complaint action in this router."""
+    from app.db import SessionLocal
+    from app.models import AuditLog
+
+    created = client.post("/complaints", json=TUNISIAN_COMPLAINT, headers=agent_headers)
+    cid = created.json()["id"]
+    resp = client.patch(f"/complaints/{cid}/status", json={"status": "new"}, headers=agent_headers)
+    assert resp.status_code == 200
+
+    db = SessionLocal()
+    try:
+        entry = (
+            db.query(AuditLog)
+            .filter(AuditLog.action == "complaint.status_updated", AuditLog.target_id == cid)
+            .first()
+        )
+        assert entry is not None, "no AuditLog entry was written for complaint.status_updated"
+    finally:
+        db.close()
+
+
 def test_update_status_nonexistent_complaint(client, agent_headers):
     resp = client.patch(
         "/complaints/00000000-0000-0000-0000-000000000000/status",

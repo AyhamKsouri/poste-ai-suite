@@ -1,14 +1,20 @@
 from datetime import datetime
+from enum import Enum
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 # ---- Auth ----
 
+class UserRole(str, Enum):
+    agent = "agent"
+    admin = "admin"
+
+
 class UserCreate(BaseModel):
     email: str
-    password: str
+    password: str = Field(min_length=8)
     full_name: str
-    role: str = "agent"
+    role: UserRole = UserRole.agent
     office: str | None = None
 
 

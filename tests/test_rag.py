@@ -152,6 +152,37 @@ def test_ask_happy_path_after_upload(client, admin_headers, agent_headers):
     assert "answer" in body and "sources" in body and "question_id" in body
 
 
+def test_ask_writes_audit_log_with_correct_target_id(client, admin_headers, agent_headers):
+    """Regression test for AUDIT.md finding NEW-1: the AuditLog for rag.question_asked
+    must have target_id set to the real question id, not NULL. `question.id` is a
+    Python-side ORM default only generated at flush/commit time, so it must not be
+    read before the question row is committed."""
+    from app.db import SessionLocal
+    from app.models import AuditLog
+
+    client.post(
+        "/rag/documents",
+        files={"file": ("audit_test.txt", io.BytesIO(
+            "Procédure : Test audit log.\n\nCeci est un contenu de test pour l'audit.".encode()
+        ), "text/plain")},
+        headers=admin_headers,
+    )
+    resp = client.post("/rag/ask", json={"question": "Contenu de test pour l'audit ?"}, headers=agent_headers)
+    assert resp.status_code == 200
+    question_id = resp.json()["question_id"]
+
+    db = SessionLocal()
+    try:
+        entry = (
+            db.query(AuditLog)
+            .filter(AuditLog.action == "rag.question_asked", AuditLog.target_id == question_id)
+            .first()
+        )
+        assert entry is not None, "AuditLog.target_id was NULL instead of the real question id"
+    finally:
+        db.close()
+
+
 def test_ask_empty_question(client, agent_headers):
     resp = client.post("/rag/ask", json={"question": ""}, headers=agent_headers)
     assert resp.status_code == 200  # no min_length validation - documents actual behavior
